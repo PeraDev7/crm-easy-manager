@@ -37,14 +37,34 @@ export function QuoteOptions({
 
   const saveTemplateMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("quote_templates").upsert({
-        logo_url: logoUrl,
-        footer_text: footerText,
-        font_size: fontSize,
-        name: "default",
-        created_by: (await supabase.auth.getUser()).data.user?.id,
-      });
-      if (error) throw error;
+      const { data: existingTemplates } = await supabase
+        .from("quote_templates")
+        .select()
+        .eq("name", "default")
+        .eq("created_by", (await supabase.auth.getUser()).data.user?.id);
+
+      if (existingTemplates && existingTemplates.length > 0) {
+        // Update existing template
+        const { error } = await supabase
+          .from("quote_templates")
+          .update({
+            logo_url: logoUrl,
+            footer_text: footerText,
+            font_size: fontSize,
+          })
+          .eq("id", existingTemplates[0].id);
+        if (error) throw error;
+      } else {
+        // Create new template
+        const { error } = await supabase.from("quote_templates").insert({
+          logo_url: logoUrl,
+          footer_text: footerText,
+          font_size: fontSize,
+          name: "default",
+          created_by: (await supabase.auth.getUser()).data.user?.id,
+        });
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["quote_template"] });
@@ -69,10 +89,11 @@ export function QuoteOptions({
         .from("quote_templates")
         .select()
         .eq("name", "default")
-        .single();
+        .eq("created_by", (await supabase.auth.getUser()).data.user?.id)
+        .limit(1);
       
       if (error) throw error;
-      return data;
+      return data?.[0] || null;
     },
   });
 

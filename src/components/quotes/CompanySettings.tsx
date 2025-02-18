@@ -16,22 +16,28 @@ export function CompanySettings({ onCompanySettingsChange }: CompanySettingsProp
 
   const saveSettingsMutation = useMutation({
     mutationFn: async (values: any) => {
-      const { error } = await supabase
+      const { data: existingSettings } = await supabase
         .from("company_settings")
-        .upsert({
-          company_name: values.company_name,
-          address: values.address,
-          city: values.city,
-          postal_code: values.postal_code,
-          vat_number: values.vat_number,
-          tax_code: values.tax_code,
-          email: values.email,
-          phone: values.phone,
-          pec: values.pec,
-          sdi: values.sdi,
-          created_by: (await supabase.auth.getUser()).data.user?.id,
-        });
-      if (error) throw error;
+        .select()
+        .eq("created_by", (await supabase.auth.getUser()).data.user?.id);
+
+      if (existingSettings && existingSettings.length > 0) {
+        // Update existing settings
+        const { error } = await supabase
+          .from("company_settings")
+          .update(values)
+          .eq("id", existingSettings[0].id);
+        if (error) throw error;
+      } else {
+        // Create new settings
+        const { error } = await supabase
+          .from("company_settings")
+          .insert({
+            ...values,
+            created_by: (await supabase.auth.getUser()).data.user?.id,
+          });
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["company_settings"] });
@@ -55,10 +61,11 @@ export function CompanySettings({ onCompanySettingsChange }: CompanySettingsProp
       const { data, error } = await supabase
         .from("company_settings")
         .select()
-        .single();
+        .eq("created_by", (await supabase.auth.getUser()).data.user?.id)
+        .limit(1);
       
       if (error) throw error;
-      return data;
+      return data?.[0] || null;
     },
   });
 
