@@ -1,6 +1,6 @@
 
 import { useForm } from "react-hook-form";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -105,7 +105,7 @@ export function CreateQuoteSheet({ open, onOpenChange }: CreateQuoteSheetProps) 
   };
 
   // Aggiorniamo i totali quando cambiano gli items
-  React.useEffect(() => {
+  useEffect(() => {
     setTotals(calculateTotals(items));
   }, [items]);
 
