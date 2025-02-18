@@ -14,7 +14,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Editor } from "@/components/ui/editor";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
 
 interface Attachment {
   id: string;
@@ -490,7 +490,7 @@ const ProjectDetails = () => {
               <SheetTitle>Impostazioni Progetto</SheetTitle>
             </SheetHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="space-y-4 py-4">
                 <Input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -512,25 +512,32 @@ const ProjectDetails = () => {
               <Button variant="outline" onClick={() => setIsEditOpen(false)}>
                 Annulla
               </Button>
-              <Button variant="default" onClick={() => {
-                supabase.from("projects")
-                  .update({ name, description, client_id: clientId })
-                  .eq("id", id)
-                  .then(() => {
+              <Button
+                variant="default"
+                onClick={async () => {
+                  try {
+                    const { error } = await supabase
+                      .from("projects")
+                      .update({ name, description, client_id: clientId })
+                      .eq("id", id);
+                    
+                    if (error) throw error;
+                    
+                    queryClient.invalidateQueries({ queryKey: ["project", id] });
                     toast({
                       title: "Progetto aggiornato",
                       description: "Le impostazioni del progetto sono state aggiornate",
                     });
                     setIsEditOpen(false);
-                  })
-                  .catch((error) => {
+                  } catch (error: any) {
                     toast({
                       title: "Errore",
                       description: error.message,
                       variant: "destructive",
                     });
-                  });
-              }}>
+                  }
+                }}
+              >
                 Salva
               </Button>
             </SheetFooter>
