@@ -5,6 +5,7 @@ import Clients from "./pages/Clients";
 import Projects from "./pages/Projects";
 import Leads from "./pages/Leads";
 import Calendar from "./pages/Calendar";
+import Dashboard from "./pages/Index";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "./App.css";
 
@@ -13,7 +14,7 @@ const queryClient = new QueryClient();
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Projects />,
+    element: <Dashboard />,
   },
   {
     path: "/clients",
