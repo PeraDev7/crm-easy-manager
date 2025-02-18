@@ -117,6 +117,57 @@ export type Database = {
         }
         Relationships: []
       }
+      company_settings: {
+        Row: {
+          address: string | null
+          city: string | null
+          company_name: string
+          created_at: string
+          created_by: string
+          email: string | null
+          id: string
+          pec: string | null
+          phone: string | null
+          postal_code: string | null
+          sdi: string | null
+          tax_code: string | null
+          vat_number: string | null
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          company_name: string
+          created_at?: string
+          created_by: string
+          email?: string | null
+          id?: string
+          pec?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          sdi?: string | null
+          tax_code?: string | null
+          vat_number?: string | null
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          company_name?: string
+          created_at?: string
+          created_by?: string
+          email?: string | null
+          id?: string
+          pec?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          sdi?: string | null
+          tax_code?: string | null
+          vat_number?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           color: string | null

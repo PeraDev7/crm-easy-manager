@@ -1,49 +1,102 @@
-
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import { useRequireAuth } from "./hooks/useRequireAuth";
-import Auth from "./pages/Auth";
-import Index from "./pages/Index";
+import React from "react";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import Quotes from "./pages/Quotes";
 import Clients from "./pages/Clients";
 import Projects from "./pages/Projects";
-import ProjectDetails from "./pages/ProjectDetails";
-import Quotes from "./pages/Quotes";
 import Leads from "./pages/Leads";
+import Tasks from "./pages/Tasks";
 import Calendar from "./pages/Calendar";
-import NotFound from "./pages/NotFound";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import "./App.css";
+import { AuthProvider } from "./components/AuthProvider";
+import Login from "./pages/Login";
+import { RequireAuth } from "./components/RequireAuth";
+import Invoices from "./pages/Invoices";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
-function AppRoutes() {
-  const { initialized } = useRequireAuth();
-
-  if (!initialized) {
-    return null;
-  }
-
-  return (
-    <Routes>
-      <Route path="/auth" element={<Auth />} />
-      <Route path="/" element={<Index />} />
-      <Route path="/clients" element={<Clients />} />
-      <Route path="/projects" element={<Projects />} />
-      <Route path="/projects/:id" element={<ProjectDetails />} />
-      <Route path="/quotes" element={<Quotes />} />
-      <Route path="/leads" element={<Leads />} />
-      <Route path="/calendar" element={<Calendar />} />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  );
-}
+const router = createBrowserRouter([
+  {
+    path: "/login",
+    element: <Login />,
+  },
+  {
+    path: "/",
+    element: (
+      <RequireAuth>
+        <Quotes />
+      </RequireAuth>
+    ),
+  },
+  {
+    path: "/quotes",
+    element: (
+      <RequireAuth>
+        <Quotes />
+      </RequireAuth>
+    ),
+  },
+  {
+    path: "/clients",
+    element: (
+      <RequireAuth>
+        <Clients />
+      </RequireAuth>
+    ),
+  },
+  {
+    path: "/projects",
+    element: (
+      <RequireAuth>
+        <Projects />
+      </RequireAuth>
+    ),
+  },
+  {
+    path: "/invoices",
+    element: (
+      <RequireAuth>
+        <Invoices />
+      </RequireAuth>
+    ),
+  },
+  {
+    path: "/leads",
+    element: (
+      <RequireAuth>
+        <Leads />
+      </RequireAuth>
+    ),
+  },
+  {
+    path: "/tasks",
+    element: (
+      <RequireAuth>
+        <Tasks />
+      </RequireAuth>
+    ),
+  },
+  {
+    path: "/calendar",
+    element: (
+      <RequireAuth>
+        <Calendar />
+      </RequireAuth>
+    ),
+  },
+  {
+    path: "/settings",
+    element: <Settings />,
+  },
+]);
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AppRoutes />
-      </BrowserRouter>
-      <Toaster />
+    <QueryClientProvider value={queryClient}>
+      <AuthProvider>
+        <RouterProvider router={router} />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

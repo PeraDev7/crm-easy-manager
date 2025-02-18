@@ -1,94 +1,105 @@
+import {
+  LayoutDashboard,
+  Settings,
+  Users,
+  FileInvoice,
+  Calendar,
+  KanbanSquare,
+  LucideIcon,
+  Plus,
+} from "lucide-react";
+import { Link } from "react-router-dom";
 
-import { Calendar, Folder, Home, Users, FileText, List, LogOut } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
-  SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "./ui/use-toast";
-
-const menuItems = [
-  {
-    title: "Dashboard",
-    path: "/",
-    icon: Home,
-  },
-  {
-    title: "Clienti",
-    path: "/clients",
-    icon: Users,
-  },
-  {
-    title: "Progetti",
-    path: "/projects",
-    icon: Folder,
-  },
-  {
-    title: "Preventivi",
-    path: "/quotes",
-    icon: FileText,
-  },
-  {
-    title: "Lead",
-    path: "/leads",
-    icon: List,
-  },
-  {
-    title: "Calendario",
-    path: "/calendar",
-    icon: Calendar,
-  },
-];
 
 export function AppSidebar() {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-
-  const handleLogout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      navigate("/auth");
-    } catch (error: any) {
-      toast({
-        title: "Errore",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
   return (
     <Sidebar>
+      <SidebarHeader>
+        <div className="p-4">
+          <h1 className="font-bold">CRM</h1>
+          <p className="text-sm text-muted-foreground">
+            Gestisci la tua attività
+          </p>
+        </div>
+      </SidebarHeader>
+      
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Menu</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton onClick={() => navigate(item.path)}>
-                    <item.icon className="w-5 h-5" />
-                    <span>{item.title}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-              <SidebarMenuItem>
-                <SidebarMenuButton onClick={handleLogout}>
-                  <LogOut className="w-5 h-5" />
-                  <span>Logout</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        <SidebarMenu>
+          
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <Link to="/">
+                <LayoutDashboard className="w-4 h-4" />
+                <span>Dashboard</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <Link to="/projects">
+                <KanbanSquare className="w-4 h-4" />
+                <span>Progetti</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <Link to="/clients">
+                <Users className="w-4 h-4" />
+                <span>Clienti</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <Link to="/invoices">
+                <FileInvoice className="w-4 h-4" />
+                <span>Fatture</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <Link to="/quotes">
+                <FileInvoice className="w-4 h-4" />
+                <span>Preventivi</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <Link to="/calendar">
+                <Calendar className="w-4 h-4" />
+                <span>Calendario</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <Link to="/settings">
+                <Settings className="w-4 h-4" />
+                <span>Impostazioni</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarContent>
     </Sidebar>
   );

@@ -206,25 +206,31 @@ const Quotes = () => {
   };
 
   const handleDownload = async (id: string) => {
-    const { data: quote, error: quoteError } = await supabase
-      .from("quotes")
-      .select(`
-        *,
-        quote_items(*),
-        projects (
-          name,
-          clients (
+    const [quoteResult, settingsResult] = await Promise.all([
+      supabase
+        .from("quotes")
+        .select(`
+          *,
+          quote_items(*),
+          projects (
             name,
-            address,
-            vat_number,
-            tax_code
+            clients (
+              name,
+              address,
+              vat_number,
+              tax_code
+            )
           )
-        )
-      `)
-      .eq("id", id)
-      .single();
+        `)
+        .eq("id", id)
+        .single(),
+      supabase
+        .from("company_settings")
+        .select("*")
+        .single()
+    ]);
 
-    if (quoteError) {
+    if (quoteResult.error) {
       toast({
         title: "Errore",
         description: "Errore nel caricamento del preventivo",
@@ -232,6 +238,9 @@ const Quotes = () => {
       });
       return;
     }
+
+    const quote = quoteResult.data;
+    const settings = settingsResult.data;
 
     const doc = new jsPDF({
       orientation: "portrait",
@@ -248,8 +257,7 @@ const Quotes = () => {
     const textColor = "#1a1a1a";
     doc.setTextColor(textColor);
 
-    doc.setFontSize(18);
-    doc.text(`Preventivo n. ${quote.number}`, margin, 30);
+    let yPos = 20;
 
     if (quote.logo_url) {
       try {
@@ -258,7 +266,7 @@ const Quotes = () => {
         const reader = new FileReader();
         reader.onloadend = () => {
           const base64data = reader.result as string;
-          doc.addImage(base64data, "PNG", pageWidth - 60, 20, 40, 15, undefined, "FAST");
+          doc.addImage(base64data, "PNG", pageWidth - 60, yPos, 40, 15, undefined, "FAST");
         };
         reader.readAsDataURL(blob);
       } catch (error) {
@@ -266,7 +274,50 @@ const Quotes = () => {
       }
     }
 
-    let yPos = 50;
+    if (settings) {
+      doc.setFontSize(14);
+      doc.text(settings.company_name, margin, yPos);
+      doc.setFontSize(fontSize);
+      yPos += 6;
+      
+      if (settings.address || settings.city || settings.postal_code) {
+        const address = [settings.address, settings.city, settings.postal_code]
+          .filter(Boolean)
+          .join(" - ");
+        doc.text(address, margin, yPos);
+        yPos += 5;
+      }
+
+      if (settings.vat_number || settings.tax_code) {
+        const fiscalInfo = [];
+        if (settings.vat_number) fiscalInfo.push(`P.IVA: ${settings.vat_number}`);
+        if (settings.tax_code) fiscalInfo.push(`C.F.: ${settings.tax_code}`);
+        doc.text(fiscalInfo.join(" - "), margin, yPos);
+        yPos += 5;
+      }
+
+      if (settings.email || settings.phone) {
+        const contactInfo = [];
+        if (settings.email) contactInfo.push(settings.email);
+        if (settings.phone) contactInfo.push(settings.phone);
+        doc.text(contactInfo.join(" - "), margin, yPos);
+        yPos += 5;
+      }
+
+      if (settings.pec || settings.sdi) {
+        const digitalInfo = [];
+        if (settings.pec) digitalInfo.push(`PEC: ${settings.pec}`);
+        if (settings.sdi) digitalInfo.push(`SDI: ${settings.sdi}`);
+        doc.text(digitalInfo.join(" - "), margin, yPos);
+        yPos += 5;
+      }
+
+      yPos += 10;
+    }
+
+    doc.setFontSize(18);
+    doc.text(`Preventivo n. ${quote.number}`, margin, yPos);
+    yPos += 20;
 
     if (quote.projects?.clients) {
       const client = quote.projects.clients;
