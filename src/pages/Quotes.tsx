@@ -233,33 +233,69 @@ const Quotes = () => {
       return;
     }
 
-    const doc = new jsPDF();
-    
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
+    });
+
     const fontSize = quote.font_size === "large" ? 14 : quote.font_size === "small" ? 10 : 12;
     doc.setFontSize(fontSize);
 
+    const primaryColor = "#9b87f5";
+    const secondaryColor = "#403E43";
+    const lightGray = "#F1F0FB";
+
+    doc.setFillColor(primaryColor);
+    doc.rect(0, 0, 210, 40, "F");
+
     if (quote.logo_url) {
       try {
-        // In un'implementazione reale, dovresti gestire il caricamento dell'immagine
-        // doc.addImage(quote.logo_url, "JPEG", 15, 15, 50, 50);
+        const response = await fetch(quote.logo_url);
+        const blob = await response.blob();
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64data = reader.result as string;
+          doc.addImage(base64data, "PNG", 15, 10, 40, 20, undefined, "FAST");
+        };
+        reader.readAsDataURL(blob);
       } catch (error) {
         console.error("Errore nel caricamento del logo:", error);
       }
     }
 
-    doc.setFontSize(fontSize + 4);
-    doc.text(`Preventivo #${quote.number}`, 15, 20);
+    doc.setTextColor("#FFFFFF");
+    doc.setFontSize(24);
+    doc.text("PREVENTIVO", 150, 20);
+    doc.setFontSize(14);
+    doc.text(`#${quote.number}`, 150, 30);
+
+    doc.setTextColor(secondaryColor);
     doc.setFontSize(fontSize);
 
-    doc.text(`Data: ${format(new Date(quote.date), "dd/MM/yyyy")}`, 15, 30);
+    const formattedDate = format(new Date(quote.date), "dd/MM/yyyy");
+    doc.setFillColor(lightGray);
+    doc.roundedRect(15, 50, 180, 10, 2, 2, "F");
+    doc.text(`Data: ${formattedDate}`, 20, 56);
 
+    let yPos = 70;
     if (quote.projects?.clients) {
       const client = quote.projects.clients;
-      doc.text("Cliente:", 15, 45);
-      doc.text(client.name, 15, 55);
-      if (client.address) doc.text(client.address, 15, 65);
-      if (client.vat_number) doc.text(`P.IVA: ${client.vat_number}`, 15, 75);
-      if (client.tax_code) doc.text(`C.F.: ${client.tax_code}`, 15, 85);
+      doc.setFillColor(lightGray);
+      doc.roundedRect(15, yPos, 180, 40, 2, 2, "F");
+      
+      doc.setFontSize(fontSize + 2);
+      doc.text("CLIENTE", 20, yPos + 8);
+      doc.setFontSize(fontSize);
+      
+      doc.text(client.name, 20, yPos + 18);
+      if (client.address) doc.text(client.address, 20, yPos + 28);
+      const fiscalInfo = [];
+      if (client.vat_number) fiscalInfo.push(`P.IVA: ${client.vat_number}`);
+      if (client.tax_code) fiscalInfo.push(`C.F.: ${client.tax_code}`);
+      doc.text(fiscalInfo.join(" - "), 20, yPos + 38);
+      
+      yPos += 50;
     }
 
     const tableRows = quote.quote_items.map((item: any) => [
@@ -271,19 +307,48 @@ const Quotes = () => {
     ]);
 
     autoTable(doc, {
-      startY: quote.projects?.clients ? 100 : 40,
+      startY: yPos + 10,
       head: [["Descrizione", "Quantità", "Prezzo Unit.", "IVA", "Totale"]],
       body: tableRows,
       theme: "grid",
-      headStyles: { fillColor: [41, 128, 185], textColor: 255 },
-      styles: { fontSize: fontSize },
+      headStyles: { 
+        fillColor: [155, 135, 245],
+        textColor: 255,
+        fontSize: fontSize + 2,
+        fontStyle: "bold",
+        cellPadding: 8,
+      },
+      bodyStyles: {
+        fontSize: fontSize,
+        cellPadding: 6,
+      },
+      alternateRowStyles: {
+        fillColor: [241, 240, 251],
+      },
+      columnStyles: {
+        0: { cellWidth: 80 },
+        1: { cellWidth: 20, halign: "center" },
+        2: { cellWidth: 30, halign: "right" },
+        3: { cellWidth: 20, halign: "center" },
+        4: { cellWidth: 30, halign: "right" },
+      },
     });
 
     const finalY = (doc as any).lastAutoTable.finalY + 10;
-    doc.text(`Totale: €${quote.total_amount.toFixed(2)}`, 15, finalY);
+    doc.setFillColor(primaryColor);
+    doc.roundedRect(120, finalY, 75, 15, 2, 2, "F");
+    doc.setTextColor("#FFFFFF");
+    doc.setFontSize(fontSize + 2);
+    doc.text(`Totale: €${quote.total_amount.toFixed(2)}`, 125, finalY + 10);
 
     if (quote.footer_text) {
-      doc.text(quote.footer_text, 15, finalY + 20);
+      doc.setTextColor(secondaryColor);
+      doc.setFontSize(fontSize);
+      doc.setFillColor(lightGray);
+      doc.roundedRect(15, finalY + 25, 180, 20, 2, 2, "F");
+      doc.text(quote.footer_text, 20, finalY + 35, {
+        maxWidth: 170,
+      });
     }
 
     doc.save(`preventivo_${quote.number}.pdf`);
