@@ -336,13 +336,46 @@ export type Database = {
           },
         ]
       }
+      quote_templates: {
+        Row: {
+          created_at: string
+          created_by: string
+          font_size: string | null
+          footer_text: string | null
+          id: string
+          logo_url: string | null
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          font_size?: string | null
+          footer_text?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          font_size?: string | null
+          footer_text?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+        }
+        Relationships: []
+      }
       quotes: {
         Row: {
           converted_to_invoice: string | null
           created_at: string
           created_by: string
           date: string
+          font_size: string | null
+          footer_text: string | null
           id: string
+          logo_url: string | null
           notes: string | null
           number: string
           project_id: string | null
@@ -356,7 +389,10 @@ export type Database = {
           created_at?: string
           created_by: string
           date?: string
+          font_size?: string | null
+          footer_text?: string | null
           id?: string
+          logo_url?: string | null
           notes?: string | null
           number: string
           project_id?: string | null
@@ -370,7 +406,10 @@ export type Database = {
           created_at?: string
           created_by?: string
           date?: string
+          font_size?: string | null
+          footer_text?: string | null
           id?: string
+          logo_url?: string | null
           notes?: string | null
           number?: string
           project_id?: string | null

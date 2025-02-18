@@ -12,6 +12,7 @@ import { CreateQuoteSheet } from "@/components/quotes/CreateQuoteSheet";
 
 const Quotes = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -25,12 +26,12 @@ const Quotes = () => {
           *,
           projects (
             name,
-            client_id,
             clients (
               name
             )
           )
-        `);
+        `)
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -48,16 +49,41 @@ const Quotes = () => {
   });
 
   const createQuoteMutation = useMutation({
-    mutationFn: async (values: {
-      project_id: string;
-      number: string;
-      valid_until?: string;
-    }) => {
-      const { error } = await supabase.from("quotes").insert({
-        ...values,
-        created_by: (await supabase.auth.getUser()).data.user?.id,
-      });
-      if (error) throw error;
+    mutationFn: async (values: any) => {
+      // Creare il preventivo
+      const { data: quote, error: quoteError } = await supabase
+        .from("quotes")
+        .insert({
+          project_id: values.project_id,
+          number: `Q-${Math.floor(Math.random() * 10000)}`,
+          total_amount: values.total_amount,
+          logo_url: values.logo_url,
+          footer_text: values.footer_text,
+          font_size: values.font_size,
+          created_by: (await supabase.auth.getUser()).data.user?.id,
+        })
+        .select()
+        .single();
+
+      if (quoteError) throw quoteError;
+
+      // Creare gli elementi del preventivo
+      const quoteItems = values.items.map((item: any) => ({
+        quote_id: quote.id,
+        description: item.description,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        total_price: item.quantity * item.unit_price,
+        vat_rate: item.vat_rate,
+      }));
+
+      const { error: itemsError } = await supabase
+        .from("quote_items")
+        .insert(quoteItems);
+
+      if (itemsError) throw itemsError;
+
+      return quote;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["quotes"] });
@@ -76,68 +102,10 @@ const Quotes = () => {
     },
   });
 
-  const convertToInvoiceMutation = useMutation({
-    mutationFn: async (quoteId: string) => {
-      const { data: quote } = await supabase
-        .from("quotes")
-        .select("*, quote_items(*)")
-        .eq("id", quoteId)
-        .single();
-
-      if (!quote) throw new Error("Preventivo non trovato");
-
-      const { data: invoice, error: invoiceError } = await supabase
-        .from("invoices")
-        .insert({
-          project_id: quote.project_id,
-          number: `INV-${quote.number}`,
-          total_amount: quote.total_amount,
-          created_by: (await supabase.auth.getUser()).data.user?.id,
-        })
-        .select()
-        .single();
-
-      if (invoiceError) throw invoiceError;
-
-      if (quote.quote_items) {
-        const invoiceItems = quote.quote_items.map((item: any) => ({
-          invoice_id: invoice.id,
-          description: item.description,
-          quantity: item.quantity,
-          unit_price: item.unit_price,
-          total_price: item.total_price,
-          vat_rate: item.vat_rate,
-        }));
-
-        const { error: itemsError } = await supabase
-          .from("invoice_items")
-          .insert(invoiceItems);
-
-        if (itemsError) throw itemsError;
-      }
-
-      const { error: updateError } = await supabase
-        .from("quotes")
-        .update({ converted_to_invoice: invoice.id, status: "accepted" })
-        .eq("id", quoteId);
-
-      if (updateError) throw updateError;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["quotes"] });
-      toast({
-        title: "Preventivo convertito",
-        description: "Il preventivo è stato convertito in fattura con successo",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Errore",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
+  const handleProjectSelect = (project: any) => {
+    setSelectedProject(project);
+    setIsOpen(true);
+  };
 
   const filteredQuotes = quotes?.filter((quote) =>
     quote.number.toLowerCase().includes(searchQuery.toLowerCase())
@@ -148,10 +116,18 @@ const Quotes = () => {
       <div className="container mx-auto py-6 space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold">Preventivi</h1>
-          <Button onClick={() => setIsOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nuovo Preventivo
-          </Button>
+          <div className="flex gap-2">
+            {projects?.map((project) => (
+              <Button
+                key={project.id}
+                onClick={() => handleProjectSelect(project)}
+                variant="outline"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Nuovo per {project.name}
+              </Button>
+            ))}
+          </div>
         </div>
 
         <SearchBar
@@ -169,7 +145,7 @@ const Quotes = () => {
               <QuoteCard
                 key={quote.id}
                 quote={quote}
-                onConvert={(id) => convertToInvoiceMutation.mutate(id)}
+                onConvert={() => {}}
               />
             ))}
           </div>
@@ -178,13 +154,8 @@ const Quotes = () => {
         <CreateQuoteSheet
           isOpen={isOpen}
           onOpenChange={setIsOpen}
-          projects={projects}
-          onSubmit={(projectId) =>
-            createQuoteMutation.mutate({
-              project_id: projectId,
-              number: `Q-${Math.floor(Math.random() * 10000)}`,
-            })
-          }
+          project={selectedProject}
+          onSubmit={createQuoteMutation.mutate}
         />
       </div>
     </Layout>
