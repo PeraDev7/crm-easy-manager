@@ -1,4 +1,3 @@
-
 import {
   Table,
   TableBody,
@@ -11,9 +10,11 @@ import { EditQuoteSheet } from "./EditQuoteSheet";
 import { ViewQuoteSheet } from "./ViewQuoteSheet";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { QuoteTableRow } from "./QuoteTableRow";
 import { DeleteQuoteDialog } from "./DeleteQuoteDialog";
+import { generateQuotePDF } from "@/utils/generateQuotePDF";
 
 type Quote = {
   id: string;
@@ -74,9 +75,39 @@ export function QuotesList({ quotes }: QuotesListProps) {
     }
   };
 
-  const handleDownload = (id: string) => {
-    // TODO: Implementare il download del PDF
-    console.log("Download quote", id);
+  const handleDownload = async (id: string) => {
+    try {
+      // Fetch the complete quote data
+      const { data: quote, error: quoteError } = await supabase
+        .from("quotes")
+        .select(`
+          *,
+          quote_items(*),
+          client:clients(*)
+        `)
+        .eq("id", id)
+        .single();
+      
+      if (quoteError) throw quoteError;
+
+      // Fetch company settings
+      const { data: companySettings, error: settingsError } = await supabase
+        .from("company_settings")
+        .select("*")
+        .single();
+      
+      if (settingsError) throw settingsError;
+
+      // Generate and download PDF
+      generateQuotePDF(quote, companySettings);
+    } catch (error) {
+      console.error("Error downloading quote:", error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante il download del preventivo.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
