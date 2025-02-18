@@ -206,23 +206,29 @@ const Quotes = () => {
   };
 
   const handleDownload = async (id: string) => {
-    const quoteResult = await supabase
-      .from("quotes")
-      .select(`
-        *,
-        quote_items(*),
-        projects (
-          name,
-          clients (
+    const [quoteResult, settingsResult] = await Promise.all([
+      supabase
+        .from("quotes")
+        .select(`
+          *,
+          quote_items(*),
+          projects (
             name,
-            address,
-            vat_number,
-            tax_code
+            clients (
+              name,
+              address,
+              vat_number,
+              tax_code
+            )
           )
-        )
-      `)
-      .eq("id", id)
-      .single();
+        `)
+        .eq("id", id)
+        .single(),
+      supabase
+        .from("company_settings")
+        .select("*")
+        .single()
+    ]);
 
     if (quoteResult.error) {
       toast({
@@ -234,6 +240,7 @@ const Quotes = () => {
     }
 
     const quote = quoteResult.data;
+    const settings = settingsResult.data;
 
     const doc = new jsPDF({
       orientation: "portrait",
@@ -266,6 +273,51 @@ const Quotes = () => {
         console.error("Errore nel caricamento del logo:", error);
       }
     }
+
+    if (settings) {
+      doc.setFontSize(14);
+      doc.text(settings.company_name, margin, yPos);
+      doc.setFontSize(fontSize);
+      yPos += 6;
+      
+      if (settings.address || settings.city || settings.postal_code) {
+        const address = [settings.address, settings.city, settings.postal_code]
+          .filter(Boolean)
+          .join(" - ");
+        doc.text(address, margin, yPos);
+        yPos += 5;
+      }
+
+      if (settings.vat_number || settings.tax_code) {
+        const fiscalInfo = [];
+        if (settings.vat_number) fiscalInfo.push(`P.IVA: ${settings.vat_number}`);
+        if (settings.tax_code) fiscalInfo.push(`C.F.: ${settings.tax_code}`);
+        doc.text(fiscalInfo.join(" - "), margin, yPos);
+        yPos += 5;
+      }
+
+      if (settings.email || settings.phone) {
+        const contactInfo = [];
+        if (settings.email) contactInfo.push(settings.email);
+        if (settings.phone) contactInfo.push(settings.phone);
+        doc.text(contactInfo.join(" - "), margin, yPos);
+        yPos += 5;
+      }
+
+      if (settings.pec || settings.sdi) {
+        const digitalInfo = [];
+        if (settings.pec) digitalInfo.push(`PEC: ${settings.pec}`);
+        if (settings.sdi) digitalInfo.push(`SDI: ${settings.sdi}`);
+        doc.text(digitalInfo.join(" - "), margin, yPos);
+        yPos += 5;
+      }
+
+      yPos += 10;
+    }
+
+    doc.setFontSize(18);
+    doc.text(`Preventivo n. ${quote.number}`, margin, yPos);
+    yPos += 20;
 
     if (quote.projects?.clients) {
       const client = quote.projects.clients;

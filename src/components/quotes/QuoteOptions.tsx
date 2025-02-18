@@ -6,6 +6,7 @@ import { Editor } from "@/components/ui/editor";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { CompanySettings } from "./CompanySettings";
 import {
   Select,
   SelectContent,
@@ -61,7 +62,6 @@ export function QuoteOptions({
     },
   });
 
-  // Carica il template salvato
   const { data: template } = useQuery({
     queryKey: ["quote_template"],
     queryFn: async () => {
@@ -76,7 +76,6 @@ export function QuoteOptions({
     },
   });
 
-  // Aggiorna i valori quando il template viene caricato
   useEffect(() => {
     if (template) {
       onLogoUrlChange(template.logo_url || "");
@@ -101,41 +100,50 @@ export function QuoteOptions({
   };
 
   return (
-    <div className="space-y-4">
-      <h3 className="font-medium">Personalizzazione</h3>
-      <div className="grid gap-4">
-        <div>
-          <Label htmlFor="logo">URL Logo</Label>
-          <Input
-            id="logo"
-            value={logoUrl}
-            onChange={(e) => handleChange("logo_url", e.target.value)}
-            placeholder="Inserisci l'URL del logo..."
-          />
-        </div>
-        <div>
-          <Label htmlFor="fontSize">Dimensione Font</Label>
-          <Select 
-            value={fontSize} 
-            onValueChange={(value) => handleChange("font_size", value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Seleziona dimensione font" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="small">Piccolo</SelectItem>
-              <SelectItem value="medium">Medio</SelectItem>
-              <SelectItem value="large">Grande</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label htmlFor="footerText">Testo in calce</Label>
-          <Editor
-            value={footerText}
-            onChange={(value) => handleChange("footer_text", value)}
-            className="min-h-[100px]"
-          />
+    <div className="space-y-8">
+      <CompanySettings 
+        onCompanySettingsChange={() => {
+          // Aggiorniamo il template quando cambiano le impostazioni dell'azienda
+          saveTemplateMutation.mutate();
+        }} 
+      />
+      
+      <div className="space-y-4">
+        <h3 className="font-medium">Personalizzazione Preventivo</h3>
+        <div className="grid gap-4">
+          <div>
+            <Label htmlFor="logo">URL Logo</Label>
+            <Input
+              id="logo"
+              value={logoUrl}
+              onChange={(e) => handleChange("logo_url", e.target.value)}
+              placeholder="Inserisci l'URL del logo..."
+            />
+          </div>
+          <div>
+            <Label htmlFor="fontSize">Dimensione Font</Label>
+            <Select 
+              value={fontSize} 
+              onValueChange={(value) => handleChange("font_size", value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Seleziona dimensione font" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="small">Piccolo</SelectItem>
+                <SelectItem value="medium">Medio</SelectItem>
+                <SelectItem value="large">Grande</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label htmlFor="footerText">Testo in calce</Label>
+            <Editor
+              value={footerText}
+              onChange={(value) => handleChange("footer_text", value)}
+              className="min-h-[100px]"
+            />
+          </div>
         </div>
       </div>
     </div>
