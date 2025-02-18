@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Editor } from "@/components/ui/editor";
@@ -105,7 +105,7 @@ export function QuoteOptions({
     }
   }, [template, onLogoUrlChange, onFooterTextChange, onFontSizeChange]);
 
-  const handleChange = (field: "logo_url" | "footer_text" | "font_size", value: string) => {
+  const handleChange = useCallback((field: "logo_url" | "footer_text" | "font_size", value: string) => {
     switch (field) {
       case "logo_url":
         onLogoUrlChange(value);
@@ -117,15 +117,18 @@ export function QuoteOptions({
         onFontSizeChange(value);
         break;
     }
+  }, [onLogoUrlChange, onFooterTextChange, onFontSizeChange]);
+
+  const handleSave = useCallback(() => {
     saveTemplateMutation.mutate();
-  };
+  }, [saveTemplateMutation]);
 
   return (
     <div className="space-y-8">
       <CompanySettings 
         onCompanySettingsChange={() => {
-          // Aggiorniamo il template quando cambiano le impostazioni dell'azienda
-          saveTemplateMutation.mutate();
+          // Non chiamiamo più saveTemplateMutation.mutate() qui
+          queryClient.invalidateQueries({ queryKey: ["quote_template"] });
         }} 
       />
       
@@ -137,7 +140,10 @@ export function QuoteOptions({
             <Input
               id="logo"
               value={logoUrl}
-              onChange={(e) => handleChange("logo_url", e.target.value)}
+              onChange={(e) => {
+                handleChange("logo_url", e.target.value);
+                handleSave();
+              }}
               placeholder="Inserisci l'URL del logo..."
             />
           </div>
@@ -145,7 +151,10 @@ export function QuoteOptions({
             <Label htmlFor="fontSize">Dimensione Font</Label>
             <Select 
               value={fontSize} 
-              onValueChange={(value) => handleChange("font_size", value)}
+              onValueChange={(value) => {
+                handleChange("font_size", value);
+                handleSave();
+              }}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Seleziona dimensione font" />
@@ -161,7 +170,10 @@ export function QuoteOptions({
             <Label htmlFor="footerText">Testo in calce</Label>
             <Editor
               value={footerText}
-              onChange={(value) => handleChange("footer_text", value)}
+              onChange={(value) => {
+                handleChange("footer_text", value);
+                handleSave();
+              }}
               className="min-h-[100px]"
             />
           </div>
