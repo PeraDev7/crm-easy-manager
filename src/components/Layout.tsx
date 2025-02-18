@@ -37,13 +37,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen flex w-full bg-background">
+    <div className="min-h-screen flex bg-background">
       <AppSidebar />
-      <main className="flex-1 overflow-x-hidden">
-        <div className="container py-4">
-          <div className="animate-fadeIn">
-            {children}
-          </div>
+      <main className="flex-1 overflow-x-hidden p-6">
+        <div className="animate-fadeIn">
+          {children}
         </div>
       </main>
     </div>
