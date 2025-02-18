@@ -43,18 +43,28 @@ interface QuoteFormProps {
   clients?: any[];
   lastQuoteNumber?: string;
   onSubmit: (values: QuoteFormValues, items: QuoteItem[], totals: { subtotal: number; taxAmount: number; total: number; taxEnabled: boolean }) => void;
+  defaultValues?: QuoteFormValues;
+  initialItems?: QuoteItem[];
+  initialTaxEnabled?: boolean;
 }
 
-export function QuoteForm({ clients, lastQuoteNumber, onSubmit }: QuoteFormProps) {
-  const [items, setItems] = useState<QuoteItem[]>([
-    { description: "", quantity: 1, unit_price: 0 },
-  ]);
-  const [taxEnabled, setTaxEnabled] = useState(true);
+export function QuoteForm({ 
+  clients, 
+  lastQuoteNumber, 
+  onSubmit,
+  defaultValues,
+  initialItems,
+  initialTaxEnabled = true,
+}: QuoteFormProps) {
+  const [items, setItems] = useState<QuoteItem[]>(
+    initialItems || [{ description: "", quantity: 1, unit_price: 0 }]
+  );
+  const [taxEnabled, setTaxEnabled] = useState(initialTaxEnabled);
   const [totals, setTotals] = useState({ subtotal: 0, taxAmount: 0, total: 0 });
 
   const form = useForm<QuoteFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
+    defaultValues: defaultValues || {
       client_id: "",
       date: new Date().toISOString().split("T")[0],
       expiry_date: "",
