@@ -2,18 +2,10 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Editor } from "@/components/ui/editor";
 import { Separator } from "@/components/ui/separator";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { FileText, Plus, Settings, Trash2 } from "lucide-react";
+import { FileText, Plus, Settings } from "lucide-react";
+import { QuoteOptions } from "./QuoteOptions";
+import { QuoteItemForm } from "./QuoteItemForm";
 
 interface QuoteItem {
   description: string;
@@ -102,40 +94,15 @@ export function CreateQuoteForm({
         </Button>
 
         {showOptions && (
-          <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
-            <h3 className="font-medium">Personalizzazione</h3>
-            <div className="grid gap-4">
-              <div>
-                <Label htmlFor="logo">URL Logo</Label>
-                <Input
-                  id="logo"
-                  value={logoUrl}
-                  onChange={(e) => setLogoUrl(e.target.value)}
-                  placeholder="Inserisci l'URL del logo..."
-                />
-              </div>
-              <div>
-                <Label htmlFor="fontSize">Dimensione Font</Label>
-                <Select value={fontSize} onValueChange={setFontSize}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleziona dimensione font" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="small">Piccolo</SelectItem>
-                    <SelectItem value="medium">Medio</SelectItem>
-                    <SelectItem value="large">Grande</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="footerText">Testo in calce</Label>
-                <Editor
-                  value={footerText}
-                  onChange={setFooterText}
-                  className="min-h-[100px]"
-                />
-              </div>
-            </div>
+          <div className="p-4 border rounded-lg bg-muted/30">
+            <QuoteOptions
+              logoUrl={logoUrl}
+              fontSize={fontSize}
+              footerText={footerText}
+              onLogoUrlChange={setLogoUrl}
+              onFontSizeChange={setFontSize}
+              onFooterTextChange={setFooterText}
+            />
           </div>
         )}
 
@@ -151,69 +118,13 @@ export function CreateQuoteForm({
           </div>
 
           {items.map((item, index) => (
-            <div key={index} className="grid gap-4 p-4 border rounded-lg">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <Label>Descrizione</Label>
-                  <Input
-                    value={item.description}
-                    onChange={(e) =>
-                      updateItem(index, "description", e.target.value)
-                    }
-                    placeholder="Descrizione del servizio..."
-                  />
-                </div>
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <Label>Quantità</Label>
-                    <Input
-                      type="number"
-                      min="1"
-                      value={item.quantity}
-                      onChange={(e) =>
-                        updateItem(index, "quantity", Number(e.target.value))
-                      }
-                    />
-                  </div>
-                  <div>
-                    <Label>Prezzo Unitario</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={item.unit_price}
-                      onChange={(e) =>
-                        updateItem(index, "unit_price", Number(e.target.value))
-                      }
-                    />
-                  </div>
-                  <div>
-                    <Label>IVA %</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={item.vat_rate}
-                      onChange={(e) =>
-                        updateItem(index, "vat_rate", Number(e.target.value))
-                      }
-                    />
-                  </div>
-                </div>
-              </div>
-              {items.length > 1 && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="justify-self-end"
-                  onClick={() => removeItem(index)}
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Rimuovi
-                </Button>
-              )}
-            </div>
+            <QuoteItemForm
+              key={index}
+              item={item}
+              onUpdate={(field, value) => updateItem(index, field, value)}
+              onRemove={() => removeItem(index)}
+              showRemove={items.length > 1}
+            />
           ))}
         </div>
 
