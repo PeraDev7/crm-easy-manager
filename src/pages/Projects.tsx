@@ -2,18 +2,16 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useToast } from "@/hooks/use-toast";
 import { Layout } from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Search } from "lucide-react";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Project = {
   id: string;
@@ -34,6 +32,8 @@ const Projects = () => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [clientId, setClientId] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedClientFilter, setSelectedClientFilter] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -164,6 +164,12 @@ const Projects = () => {
     deleteProjectMutation.mutate(id);
   };
 
+  const filteredProjects = projects?.filter((project) => {
+    const matchesSearch = project.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesClient = !selectedClientFilter || project.client_id === selectedClientFilter;
+    return matchesSearch && matchesClient;
+  });
+
   return (
     <Layout>
       <div className="container mx-auto py-6 space-y-6">
@@ -175,42 +181,74 @@ const Projects = () => {
           </Button>
         </div>
 
+        <div className="flex gap-4 items-end">
+          <div className="flex-1">
+            <Label htmlFor="search">Cerca progetto</Label>
+            <div className="relative">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="search"
+                placeholder="Cerca per nome..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+          </div>
+          <div className="w-[200px]">
+            <Label htmlFor="client-filter">Filtra per cliente</Label>
+            <Select value={selectedClientFilter} onValueChange={setSelectedClientFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Tutti i clienti" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Tutti i clienti</SelectItem>
+                {clients?.map((client) => (
+                  <SelectItem key={client.id} value={client.id}>
+                    {client.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
         {isLoading ? (
           <div>Caricamento...</div>
         ) : (
           <div className="grid gap-4">
-            {projects?.map((project) => (
-              <Card key={project.id}>
-                <CardContent className="p-4">
+            {filteredProjects?.map((project) => (
+              <Card 
+                key={project.id}
+                className="hover:bg-accent cursor-pointer transition-colors"
+                onClick={() => navigate(`/projects/${project.id}`)}
+              >
+                <CardContent className="p-6">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div>
-                        <h3 className="font-medium">
-                          <Button
-                            variant="link"
-                            className="p-0 h-auto font-medium"
-                            onClick={() => navigate(`/projects/${project.id}`)}
-                          >
-                            {project.name}
-                          </Button>
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          Cliente: {project.clients?.name}
-                        </p>
-                      </div>
+                    <div className="space-y-1">
+                      <h3 className="text-xl font-semibold">{project.name}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Cliente: {project.clients?.name}
+                      </p>
                     </div>
                     <div className="flex items-center gap-2">
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleEdit(project)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(project);
+                        }}
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleDelete(project.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(project.id);
+                        }}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

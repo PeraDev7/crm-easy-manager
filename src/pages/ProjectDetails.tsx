@@ -8,12 +8,13 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Layout } from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Plus, Paperclip, ListTodo, Trash2, Download } from "lucide-react";
+import { ArrowLeft, Plus, Paperclip, ListTodo, Trash2, Download, Settings } from "lucide-react";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Editor } from "@/components/ui/editor";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 interface Attachment {
   id: string;
@@ -38,6 +39,10 @@ const ProjectDetails = () => {
   const [note, setNote] = useState("");
   const [taskTitle, setTaskTitle] = useState("");
   const [fileDescription, setFileDescription] = useState("");
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [clientId, setClientId] = useState("");
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
   const { data: project, isLoading: isLoadingProject } = useQuery({
     queryKey: ["project", id],
@@ -248,13 +253,13 @@ const ProjectDetails = () => {
   const getTaskStatusColor = (status: string) => {
     switch (status) {
       case "completed":
-        return "bg-green-100 text-green-800";
+        return "border-l-4 border-l-green-500";
       case "in_progress":
-        return "bg-orange-100 text-orange-800";
+        return "border-l-4 border-l-orange-500";
       case "todo":
-        return "bg-red-100 text-red-800";
+        return "border-l-4 border-l-red-500";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "border-l-4 border-l-gray-300";
     }
   };
 
@@ -301,7 +306,20 @@ const ProjectDetails = () => {
             <ArrowLeft className="h-4 w-4" />
             Torna ai progetti
           </Button>
-          <h1 className="text-2xl font-bold">{project?.name}</h1>
+          <h1 className="text-2xl font-bold flex-1">{project?.name}</h1>
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={() => {
+              setName(project?.name || "");
+              setDescription(project?.description || "");
+              setClientId(project?.client_id || "");
+              setIsEditOpen(true);
+            }}
+          >
+            <Settings className="h-4 w-4" />
+            Impostazioni progetto
+          </Button>
         </div>
 
         <Tabs defaultValue="tasks" className="w-full">
@@ -337,7 +355,7 @@ const ProjectDetails = () => {
                 <div>Caricamento task...</div>
               ) : (
                 tasks?.map((task) => (
-                  <Card key={task.id}>
+                  <Card key={task.id} className={cn("overflow-hidden", getTaskStatusColor(task.status))}>
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
@@ -354,7 +372,7 @@ const ProjectDetails = () => {
                               })
                             }
                           >
-                            <SelectTrigger className={cn("w-[180px]", getTaskStatusColor(task.status))}>
+                            <SelectTrigger className="w-[180px]">
                               <SelectValue placeholder="Seleziona stato" />
                             </SelectTrigger>
                             <SelectContent>
@@ -435,7 +453,10 @@ const ProjectDetails = () => {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => deleteFileMutation.mutate(attachment)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteFileMutation.mutate(attachment);
+                            }}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -462,6 +483,59 @@ const ProjectDetails = () => {
             </Card>
           </TabsContent>
         </Tabs>
+
+        <Sheet open={isEditOpen} onOpenChange={setIsEditOpen}>
+          <SheetContent className="w-full max-w-md">
+            <SheetHeader>
+              <SheetTitle>Impostazioni Progetto</SheetTitle>
+            </SheetHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <Input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Nome del progetto"
+                />
+                <Input
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Descrizione del progetto"
+                />
+                <Input
+                  value={clientId}
+                  onChange={(e) => setClientId(e.target.value)}
+                  placeholder="ID cliente"
+                />
+              </div>
+            </CardContent>
+            <SheetFooter>
+              <Button variant="outline" onClick={() => setIsEditOpen(false)}>
+                Annulla
+              </Button>
+              <Button variant="default" onClick={() => {
+                supabase.from("projects")
+                  .update({ name, description, client_id: clientId })
+                  .eq("id", id)
+                  .then(() => {
+                    toast({
+                      title: "Progetto aggiornato",
+                      description: "Le impostazioni del progetto sono state aggiornate",
+                    });
+                    setIsEditOpen(false);
+                  })
+                  .catch((error) => {
+                    toast({
+                      title: "Errore",
+                      description: error.message,
+                      variant: "destructive",
+                    });
+                  });
+              }}>
+                Salva
+              </Button>
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
       </div>
     </Layout>
   );
