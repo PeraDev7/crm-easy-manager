@@ -1,3 +1,4 @@
+
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,13 +17,19 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Pencil, Plus, Trash2, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-// Tipo per il form del cliente
 type ClientFormData = {
   name: string;
   email: string | null;
@@ -38,7 +45,6 @@ type ClientFormData = {
   color: string | null;
 };
 
-// Tipo per il cliente dal database
 type Client = ClientFormData & {
   id: string;
   created_at: string;
@@ -47,6 +53,7 @@ type Client = ClientFormData & {
 
 const Clients = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [viewClient, setViewClient] = useState<Client | null>(null);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState<ClientFormData>({
@@ -66,7 +73,6 @@ const Clients = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Query per ottenere i clienti
   const { data: clients, isLoading } = useQuery({
     queryKey: ["clients", searchTerm],
     queryFn: async () => {
@@ -85,7 +91,6 @@ const Clients = () => {
     },
   });
 
-  // Mutation per creare/aggiornare un cliente
   const mutation = useMutation({
     mutationFn: async (client: ClientFormData) => {
       if (editingClient) {
@@ -126,7 +131,6 @@ const Clients = () => {
     },
   });
 
-  // Mutation per eliminare un cliente
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("clients").delete().eq("id", id);
@@ -170,6 +174,10 @@ const Clients = () => {
       color: client.color,
     });
     setIsOpen(true);
+  };
+
+  const handleView = (client: Client) => {
+    setViewClient(client);
   };
 
   const handleDelete = async (id: string) => {
@@ -226,7 +234,8 @@ const Clients = () => {
           {clients?.map((client) => (
             <Card
               key={client.id}
-              className="hover:shadow-lg transition-shadow relative overflow-hidden"
+              className="hover:shadow-lg transition-shadow relative overflow-hidden cursor-pointer"
+              onClick={() => handleView(client)}
             >
               {client.color && (
                 <div 
@@ -236,8 +245,8 @@ const Clients = () => {
               )}
               <CardHeader>
                 <CardTitle className="flex justify-between items-start">
-                  <span>{client.name}</span>
-                  <div className="flex gap-2">
+                  <span>{client.business_name || client.name}</span>
+                  <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -255,18 +264,9 @@ const Clients = () => {
                   </div>
                 </CardTitle>
                 <CardDescription>
-                  {client.business_name || client.email}
+                  {client.email}
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-2 text-sm text-muted-foreground">
-                  {client.phone && <p>📞 {client.phone}</p>}
-                  {client.address && <p>📍 {client.address}</p>}
-                  {client.vat_number && <p>🏢 P.IVA: {client.vat_number}</p>}
-                  {client.pec && <p>📧 PEC: {client.pec}</p>}
-                  {client.notes && <p>📝 {client.notes}</p>}
-                </div>
-              </CardContent>
             </Card>
           ))}
         </div>
@@ -435,6 +435,61 @@ const Clients = () => {
           </form>
         </SheetContent>
       </Sheet>
+
+      <Dialog open={!!viewClient} onOpenChange={() => setViewClient(null)}>
+        <DialogContent className="max-w-[600px]">
+          {viewClient && (
+            <>
+              <DialogHeader>
+                <DialogTitle>{viewClient.business_name || viewClient.name}</DialogTitle>
+                <DialogDescription>{viewClient.email}</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                {viewClient.phone && (
+                  <div>
+                    <span className="font-medium">Telefono:</span> {viewClient.phone}
+                  </div>
+                )}
+                {viewClient.address && (
+                  <div>
+                    <span className="font-medium">Indirizzo:</span> {viewClient.address}
+                  </div>
+                )}
+                {viewClient.vat_number && (
+                  <div>
+                    <span className="font-medium">P.IVA:</span> {viewClient.vat_number}
+                  </div>
+                )}
+                {viewClient.tax_code && (
+                  <div>
+                    <span className="font-medium">Codice Fiscale:</span> {viewClient.tax_code}
+                  </div>
+                )}
+                {viewClient.sdi && (
+                  <div>
+                    <span className="font-medium">Codice SDI:</span> {viewClient.sdi}
+                  </div>
+                )}
+                {viewClient.pec && (
+                  <div>
+                    <span className="font-medium">PEC:</span> {viewClient.pec}
+                  </div>
+                )}
+                {viewClient.billing_address && (
+                  <div>
+                    <span className="font-medium">Indirizzo di Fatturazione:</span> {viewClient.billing_address}
+                  </div>
+                )}
+                {viewClient.notes && (
+                  <div>
+                    <span className="font-medium">Note:</span> {viewClient.notes}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
