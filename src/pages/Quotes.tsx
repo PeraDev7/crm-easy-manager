@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { QuotesList } from "@/components/quotes/QuotesList";
 import { CreateQuoteSheet } from "@/components/quotes/CreateQuoteSheet";
 import { useState } from "react";
+import { Layout } from "@/components/Layout";
 
 type Quote = {
   id: string;
@@ -44,22 +45,24 @@ export default function Quotes() {
   });
 
   return (
-    <div className="container py-6 space-y-4">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold tracking-tight">Preventivi</h1>
-        <Button onClick={() => setIsCreateOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nuovo Preventivo
-        </Button>
+    <Layout>
+      <div className="container py-6 space-y-4">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold tracking-tight">Preventivi</h1>
+          <Button onClick={() => setIsCreateOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Nuovo Preventivo
+          </Button>
+        </div>
+
+        {isLoading ? (
+          <div>Caricamento...</div>
+        ) : (
+          <QuotesList quotes={quotes || []} />
+        )}
+
+        <CreateQuoteSheet open={isCreateOpen} onOpenChange={setIsCreateOpen} />
       </div>
-
-      {isLoading ? (
-        <div>Caricamento...</div>
-      ) : (
-        <QuotesList quotes={quotes || []} />
-      )}
-
-      <CreateQuoteSheet open={isCreateOpen} onOpenChange={setIsCreateOpen} />
-    </div>
+    </Layout>
   );
 }
