@@ -15,22 +15,8 @@ import {
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
-  SidebarFooter,
-} from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
+import { Button } from "./ui/button";
 
 export function AppSidebar() {
   const location = useLocation();
@@ -52,124 +38,168 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar>
-      <SidebarHeader>
-        <div className="p-4">
-          <h1 className="font-bold">CRM</h1>
-          <p className="text-sm text-muted-foreground">
-            Gestisci la tua attività
-          </p>
-        </div>
-      </SidebarHeader>
+    <nav className="w-64 h-screen border-r bg-sidebar p-4 flex flex-col">
+      <div className="p-4">
+        <h1 className="font-bold">CRM</h1>
+        <p className="text-sm text-muted-foreground">
+          Gestisci la tua attività
+        </p>
+      </div>
       
-      <SidebarContent>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Link to="/">
-                <LayoutDashboard className="w-4 h-4" />
-                <span>Dashboard</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+      <div className="flex-1 space-y-1">
+        <Button
+          variant="ghost"
+          className={cn(
+            "w-full justify-start gap-2",
+            location.pathname === "/" && "bg-accent"
+          )}
+          asChild
+        >
+          <Link to="/">
+            <LayoutDashboard className="w-4 h-4" />
+            <span>Dashboard</span>
+          </Link>
+        </Button>
 
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Link to="/clients">
-                <Users className="w-4 h-4" />
-                <span>Clienti</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+        <Button
+          variant="ghost"
+          className={cn(
+            "w-full justify-start gap-2",
+            location.pathname === "/clients" && "bg-accent"
+          )}
+          asChild
+        >
+          <Link to="/clients">
+            <Users className="w-4 h-4" />
+            <span>Clienti</span>
+          </Link>
+        </Button>
 
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Link to="/projects">
-                <KanbanSquare className="w-4 h-4" />
-                <span>Progetti</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+        <Button
+          variant="ghost"
+          className={cn(
+            "w-full justify-start gap-2",
+            location.pathname === "/projects" && "bg-accent"
+          )}
+          asChild
+        >
+          <Link to="/projects">
+            <KanbanSquare className="w-4 h-4" />
+            <span>Progetti</span>
+          </Link>
+        </Button>
 
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Link to="/leads">
-                <UserSquare className="w-4 h-4" />
-                <span>Leads</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+        <Button
+          variant="ghost"
+          className={cn(
+            "w-full justify-start gap-2",
+            location.pathname === "/leads" && "bg-accent"
+          )}
+          asChild
+        >
+          <Link to="/leads">
+            <UserSquare className="w-4 h-4" />
+            <span>Leads</span>
+          </Link>
+        </Button>
 
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Link to="/quotes">
-                <List className="w-4 h-4" />
+        <Button
+          variant="ghost"
+          className={cn(
+            "w-full justify-start gap-2",
+            location.pathname === "/quotes" && "bg-accent"
+          )}
+          asChild
+        >
+          <Link to="/quotes">
+            <List className="w-4 h-4" />
+            <span>Preventivi</span>
+          </Link>
+        </Button>
+
+        <Button
+          variant="ghost"
+          className={cn(
+            "w-full justify-start gap-2",
+            location.pathname === "/calendar" && "bg-accent"
+          )}
+          asChild
+        >
+          <Link to="/calendar">
+            <Calendar className="w-4 h-4" />
+            <span>Calendario</span>
+          </Link>
+        </Button>
+
+        <div className="pt-2">
+          <Button
+            variant="ghost"
+            className={cn(
+              "w-full justify-start gap-2",
+              location.pathname === "/settings" && "bg-accent"
+            )}
+            asChild
+          >
+            <Link to="/settings">
+              <Settings className="w-4 h-4" />
+              <span>Impostazioni</span>
+            </Link>
+          </Button>
+
+          <div className="pl-4 space-y-1 mt-1">
+            <Button
+              variant="ghost"
+              className={cn(
+                "w-full justify-start gap-2 text-sm",
+                location.pathname === "/settings" && "bg-accent"
+              )}
+              asChild
+            >
+              <Link to="/settings">
+                <Cog className="w-4 h-4" />
+                <span>Generale</span>
+              </Link>
+            </Button>
+
+            <Button
+              variant="ghost"
+              className={cn(
+                "w-full justify-start gap-2 text-sm",
+                location.pathname === "/settings/quotes" && "bg-accent"
+              )}
+              asChild
+            >
+              <Link to="/settings/quotes">
+                <FileText className="w-4 h-4" />
                 <span>Preventivi</span>
               </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+            </Button>
 
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Link to="/calendar">
-                <Calendar className="w-4 h-4" />
-                <span>Calendario</span>
+            <Button
+              variant="ghost"
+              className={cn(
+                "w-full justify-start gap-2 text-sm",
+                location.pathname === "/settings/user" && "bg-accent"
+              )}
+              asChild
+            >
+              <Link to="/settings/user">
+                <User className="w-4 h-4" />
+                <span>Utente</span>
               </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+            </Button>
+          </div>
+        </div>
+      </div>
 
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={location.pathname.startsWith("/settings")}>
-              <Link to="/settings">
-                <Settings className="w-4 h-4" />
-                <span>Impostazioni</span>
-              </Link>
-            </SidebarMenuButton>
-            <SidebarMenuSub>
-              <SidebarMenuSubItem>
-                <SidebarMenuSubButton
-                  asChild
-                  isActive={location.pathname === "/settings"}
-                >
-                  <Link to="/settings">
-                    <Cog className="w-4 h-4" />
-                    <span>Generale</span>
-                  </Link>
-                </SidebarMenuSubButton>
-              </SidebarMenuSubItem>
-              <SidebarMenuSubItem>
-                <SidebarMenuSubButton
-                  asChild
-                  isActive={location.pathname === "/settings/quotes"}
-                >
-                  <Link to="/settings/quotes">
-                    <FileText className="w-4 h-4" />
-                    <span>Preventivi</span>
-                  </Link>
-                </SidebarMenuSubButton>
-              </SidebarMenuSubItem>
-              <SidebarMenuSubItem>
-                <SidebarMenuSubButton
-                  asChild
-                  isActive={location.pathname === "/settings/user"}
-                >
-                  <Link to="/settings/user">
-                    <User className="w-4 h-4" />
-                    <span>Utente</span>
-                  </Link>
-                </SidebarMenuSubButton>
-              </SidebarMenuSubItem>
-            </SidebarMenuSub>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarContent>
-
-      <SidebarFooter>
-        <SidebarMenuButton onClick={handleLogout} className="mt-auto gap-2 text-muted-foreground hover:text-foreground">
-          <LogOut className="w-4 h-4" />
-          <span>Logout</span>
-        </SidebarMenuButton>
-      </SidebarFooter>
-    </Sidebar>
+      <Button
+        variant="ghost"
+        className="mt-auto gap-2 text-muted-foreground hover:text-foreground"
+        onClick={handleLogout}
+      >
+        <LogOut className="w-4 h-4" />
+        <span>Logout</span>
+      </Button>
+    </nav>
   );
 }
