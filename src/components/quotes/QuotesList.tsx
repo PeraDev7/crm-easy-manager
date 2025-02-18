@@ -1,3 +1,4 @@
+
 import {
   Table,
   TableBody,
@@ -9,20 +10,12 @@ import { useState } from "react";
 import { EditQuoteSheet } from "./EditQuoteSheet";
 import { ViewQuoteSheet } from "./ViewQuoteSheet";
 import { useToast } from "@/hooks/use-toast";
-import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { QuoteTableRow } from "./QuoteTableRow";
 import { DeleteQuoteDialog } from "./DeleteQuoteDialog";
 import { generateQuotePDF } from "@/utils/generateQuotePDF";
 import { SearchBar } from "@/components/SearchBar";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 
 type Quote = {
   id: string;
@@ -47,22 +40,8 @@ export function QuotesList({ quotes }: QuotesListProps) {
   const [editQuoteId, setEditQuoteId] = useState<string | null>(null);
   const [viewQuoteId, setViewQuoteId] = useState<string | null>(null);
   const [quoteNumberFilter, setQuoteNumberFilter] = useState("");
-  const [clientFilter, setClientFilter] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
-
-  const { data: clients } = useQuery({
-    queryKey: ["clients"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("clients")
-        .select("id, name, business_name")
-        .order("business_name", { ascending: true, nullsFirst: false });
-
-      if (error) throw error;
-      return data;
-    },
-  });
 
   const handleDelete = async (id: string) => {
     try {
@@ -129,42 +108,18 @@ export function QuotesList({ quotes }: QuotesListProps) {
   };
 
   const filteredQuotes = quotes.filter((quote) => {
-    const matchQuoteNumber = quote.quote_number.toLowerCase().includes(quoteNumberFilter.toLowerCase());
-    const matchClient = clientFilter === "" || quote.client?.id === clientFilter;
-    
-    return matchQuoteNumber && matchClient;
+    return quote.quote_number.toLowerCase().includes(quoteNumberFilter.toLowerCase());
   });
 
   return (
     <>
       <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <SearchBar
-            label="Cerca per numero preventivo"
-            placeholder="Inserisci il numero..."
-            value={quoteNumberFilter}
-            onChange={setQuoteNumberFilter}
-          />
-          <div className="flex-1">
-            <Label>Cliente</Label>
-            <Select
-              value={clientFilter}
-              onValueChange={setClientFilter}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Seleziona un cliente" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Tutti i clienti</SelectItem>
-                {clients?.map((client) => (
-                  <SelectItem key={client.id} value={client.id}>
-                    {client.business_name || client.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+        <SearchBar
+          label="Cerca per numero preventivo"
+          placeholder="Inserisci il numero..."
+          value={quoteNumberFilter}
+          onChange={setQuoteNumberFilter}
+        />
 
         <div className="border rounded-lg">
           <Table>
