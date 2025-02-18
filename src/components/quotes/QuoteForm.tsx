@@ -42,13 +42,14 @@ type QuoteItem = {
 interface QuoteFormProps {
   clients?: any[];
   lastQuoteNumber?: string;
-  onSubmit: (values: QuoteFormValues, items: QuoteItem[], totals: { subtotal: number; taxAmount: number; total: number }) => void;
+  onSubmit: (values: QuoteFormValues, items: QuoteItem[], totals: { subtotal: number; taxAmount: number; total: number; taxEnabled: boolean }) => void;
 }
 
 export function QuoteForm({ clients, lastQuoteNumber, onSubmit }: QuoteFormProps) {
   const [items, setItems] = useState<QuoteItem[]>([
     { description: "", quantity: 1, unit_price: 0 },
   ]);
+  const [taxEnabled, setTaxEnabled] = useState(true);
   const [totals, setTotals] = useState({ subtotal: 0, taxAmount: 0, total: 0 });
 
   const form = useForm<QuoteFormValues>({
@@ -61,12 +62,12 @@ export function QuoteForm({ clients, lastQuoteNumber, onSubmit }: QuoteFormProps
     },
   });
 
-  const calculateTotals = (items: QuoteItem[]) => {
+  const calculateTotals = (items: QuoteItem[], taxEnabled: boolean) => {
     const subtotal = items.reduce(
       (sum, item) => sum + item.quantity * item.unit_price,
       0
     );
-    const taxRate = 22;
+    const taxRate = taxEnabled ? 22 : 0;
     const taxAmount = (subtotal * taxRate) / 100;
     const total = subtotal + taxAmount;
 
@@ -74,11 +75,11 @@ export function QuoteForm({ clients, lastQuoteNumber, onSubmit }: QuoteFormProps
   };
 
   useEffect(() => {
-    setTotals(calculateTotals(items));
-  }, [items]);
+    setTotals(calculateTotals(items, taxEnabled));
+  }, [items, taxEnabled]);
 
   const handleSubmit = (values: QuoteFormValues) => {
-    onSubmit(values, items, totals);
+    onSubmit(values, items, { ...totals, taxEnabled });
   };
 
   return (
@@ -152,7 +153,11 @@ export function QuoteForm({ clients, lastQuoteNumber, onSubmit }: QuoteFormProps
         </div>
 
         <QuoteItemsList items={items} onItemsChange={setItems} />
-        <QuoteTotals {...totals} />
+        <QuoteTotals 
+          {...totals} 
+          taxEnabled={taxEnabled}
+          onTaxEnabledChange={setTaxEnabled}
+        />
 
         <FormField
           control={form.control}

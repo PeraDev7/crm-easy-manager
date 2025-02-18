@@ -50,13 +50,20 @@ export function CreateQuoteSheet({ open, onOpenChange }: CreateQuoteSheetProps) 
       
       if (data && data.length > 0) {
         const lastNumber = parseInt(data[0].quote_number.split("-")[1]);
+        if (isNaN(lastNumber)) {
+          return "PRE-001";
+        }
         return `PRE-${String(lastNumber + 1).padStart(3, "0")}`;
       }
       return "PRE-001";
     },
   });
 
-  const handleSubmit = async (values: any, items: QuoteItem[], totals: { subtotal: number; taxAmount: number; total: number }) => {
+  const handleSubmit = async (
+    values: any, 
+    items: QuoteItem[], 
+    totals: { subtotal: number; taxAmount: number; total: number; taxEnabled: boolean }
+  ) => {
     try {
       const user = (await supabase.auth.getUser()).data.user;
       if (!user) throw new Error("User not found");
@@ -91,7 +98,7 @@ export function CreateQuoteSheet({ open, onOpenChange }: CreateQuoteSheetProps) 
           notes: values.notes,
           created_by: user.id,
           subtotal: totals.subtotal,
-          tax_rate: 22,
+          tax_rate: totals.taxEnabled ? 22 : 0,
           tax_amount: totals.taxAmount,
           total: totals.total,
           status: "draft",
