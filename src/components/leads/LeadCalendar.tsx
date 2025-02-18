@@ -15,11 +15,11 @@ interface LeadCalendarProps {
 }
 
 const eventColors = [
-  { bg: "#ffffff", text: "#6E59A5", border: "#F1F0FB" }, // White with Purple text
-  { bg: "#ffffff", text: "#C2410C", border: "#FEF9F8" }, // White with Orange text
-  { bg: "#ffffff", text: "#0369A1", border: "#F8FBFE" }, // White with Blue text
-  { bg: "#ffffff", text: "#3F6212", border: "#F9FCF6" }, // White with Green text
-  { bg: "#ffffff", text: "#854D0E", border: "#FEFDF7" }, // White with Yellow text
+  { bg: "#9b87f5", text: "#FFFFFF", border: "#8B5CF6" }, // Purple
+  { bg: "#F97316", text: "#FFFFFF", border: "#EA580C" }, // Orange
+  { bg: "#0EA5E9", text: "#FFFFFF", border: "#0284C7" }, // Blue
+  { bg: "#22C55E", text: "#FFFFFF", border: "#16A34A" }, // Green
+  { bg: "#EAB308", text: "#FFFFFF", border: "#CA8A04" }, // Yellow
 ];
 
 export function LeadCalendar({ leadId }: LeadCalendarProps) {
@@ -78,19 +78,19 @@ export function LeadCalendar({ leadId }: LeadCalendarProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg">
+    <div className="bg-[#F1F1F1] rounded-lg">
       <style>
         {`
           .fc {
-            --fc-border-color: #FFFFFF;
+            --fc-border-color: #E5E5E5;
             --fc-today-bg-color: #FFFFFF;
-            --fc-neutral-bg-color: #FFFFFF;
-            --fc-list-event-hover-bg-color: #FFFFFF;
-            --fc-theme-standard-border-color: #EEEEEE;
+            --fc-neutral-bg-color: #F1F1F1;
+            --fc-list-event-hover-bg-color: #F1F1F1;
+            --fc-theme-standard-border-color: #E5E5E5;
             height: 800px !important;
           }
           .fc-theme-standard .fc-scrollgrid {
-            border: none;
+            border: 1px solid #E5E5E5;
           }
           .fc .fc-toolbar {
             gap: 0.5rem;
@@ -102,8 +102,8 @@ export function LeadCalendar({ leadId }: LeadCalendarProps) {
             font-weight: 400;
           }
           .fc .fc-button {
-            background: white;
-            border: 1px solid #EEEEEE;
+            background: #FFFFFF;
+            border: 1px solid #E5E5E5;
             color: #666666;
             font-weight: 400;
             padding: 0.25rem 0.5rem;
@@ -111,13 +111,13 @@ export function LeadCalendar({ leadId }: LeadCalendarProps) {
             box-shadow: none;
           }
           .fc .fc-button:hover {
-            background: #FFFFFF;
-            border-color: #DDDDDD;
+            background: #F8F8F8;
+            border-color: #D1D1D1;
           }
           .fc .fc-button-primary:not(:disabled).fc-button-active,
           .fc .fc-button-primary:not(:disabled):active {
-            background: #FFFFFF;
-            border-color: #DDDDDD;
+            background: #F8F8F8;
+            border-color: #D1D1D1;
             color: #333333;
           }
           .fc-direction-ltr .fc-button-group > .fc-button:not(:last-child),
@@ -126,25 +126,25 @@ export function LeadCalendar({ leadId }: LeadCalendarProps) {
             margin: 0 0.125rem;
           }
           .fc-theme-standard td, .fc-theme-standard th {
-            border: 1px solid #EEEEEE;
+            border: 1px solid #E5E5E5;
           }
           .fc-timegrid-slot {
             height: 2rem !important;
           }
           .fc-day-today {
-            background: #FFFFFF !important;
+            background: #FAFAFA !important;
           }
           .fc-event {
-            border-radius: 0;
-            padding: 0.125rem;
+            border-radius: 4px;
+            padding: 0.125rem 0.25rem;
             font-size: 0.75rem;
             border: none;
             transition: all 0.15s;
-            background: #FFFFFF;
+            margin: 1px;
           }
           .fc-event:hover {
-            transform: none;
-            box-shadow: none;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
           }
           .fc-toolbar-chunk {
             display: flex;
@@ -152,29 +152,35 @@ export function LeadCalendar({ leadId }: LeadCalendarProps) {
             align-items: center;
           }
           .fc-col-header-cell {
-            padding: 0.25rem 0;
-            font-weight: 400;
-            background: #FFFFFF;
+            padding: 0.5rem 0;
+            font-weight: 500;
+            background: #F8F8F8;
           }
           .fc-timegrid-axis {
             padding: 0.25rem;
-            background: #FFFFFF;
+            background: #F8F8F8;
           }
           .fc-timegrid-slot-label {
             font-size: 0.75rem;
             color: #666666;
           }
           .fc-day-today .fc-timegrid-col-frame {
-            background: #FFFFFF;
+            background: #FAFAFA;
           }
           .fc-scrollgrid-section-body td {
-            background: #FFFFFF;
+            background: #F1F1F1;
           }
           .fc-col-header-cell-cushion {
             color: #666666;
           }
           .fc-timegrid-axis-cushion {
             color: #666666;
+          }
+          .fc-scrollgrid {
+            background: #F1F1F1;
+          }
+          .fc-col-header, .fc-col-header th {
+            background: #F8F8F8;
           }
         `}
       </style>
