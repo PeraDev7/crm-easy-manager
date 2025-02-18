@@ -11,13 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Plus, Paperclip, ListTodo, Trash2, Download } from "lucide-react";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { format } from "date-fns";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Editor } from "@/components/ui/editor";
 
 interface Attachment {
