@@ -1,7 +1,6 @@
 
 import {
   LayoutDashboard,
-  Settings,
   Users,
   FileText,
   Calendar,
@@ -87,15 +86,6 @@ export function AppSidebar() {
               <Link to="/calendar">
                 <Calendar className="w-4 h-4" />
                 <span>Calendario</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Link to="/settings">
-                <Settings className="w-4 h-4" />
-                <span>Impostazioni</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

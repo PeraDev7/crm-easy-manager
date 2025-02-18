@@ -9,7 +9,6 @@ import Calendar from "./pages/Calendar";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "./App.css";
 import Invoices from "./pages/Invoices";
-import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -41,10 +40,6 @@ const router = createBrowserRouter([
   {
     path: "/calendar",
     element: <Calendar />,
-  },
-  {
-    path: "/settings",
-    element: <Settings />,
   },
 ]);
 
