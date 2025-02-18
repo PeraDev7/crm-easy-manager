@@ -1,5 +1,5 @@
 
-import { Folder, Home, LogOut, Users } from "lucide-react";
+import { Folder, Home, LogOut, Users, FileText, Receipt } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -29,6 +29,16 @@ const menuItems = [
     title: "Progetti",
     path: "/projects",
     icon: Folder,
+  },
+  {
+    title: "Preventivi",
+    path: "/quotes",
+    icon: FileText,
+  },
+  {
+    title: "Fatture",
+    path: "/invoices",
+    icon: Receipt,
   },
 ];
 
