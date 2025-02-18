@@ -57,7 +57,7 @@ export function QuotesList({ quotes }: QuotesListProps) {
       const { data, error } = await supabase
         .from("clients")
         .select("id, name, business_name")
-        .order("business_name", { nullsLast: true });
+        .order("business_name", { ascending: true, nullsFirst: false });
 
       if (error) throw error;
       return data;
