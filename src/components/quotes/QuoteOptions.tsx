@@ -1,4 +1,5 @@
 
+import React, { useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Editor } from "@/components/ui/editor";
@@ -76,7 +77,7 @@ export function QuoteOptions({
   });
 
   // Aggiorna i valori quando il template viene caricato
-  React.useEffect(() => {
+  useEffect(() => {
     if (template) {
       onLogoUrlChange(template.logo_url || "");
       onFooterTextChange(template.footer_text || "");
