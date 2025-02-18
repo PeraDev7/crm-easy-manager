@@ -5,46 +5,30 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Layout } from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Plus, Paperclip, ListTodo, Trash2, Download, Settings, Save, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Plus, Paperclip, ListTodo, Trash2, Download, Settings, Save } from "lucide-react";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-} from "@/components/ui/sheet";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Editor } from "@/components/ui/editor";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
-type Task = {
-  id: string;
-  title: string;
-  description: string | null;
-  status: "open" | "in progress" | "done";
-  project_id: string;
-  created_at: string;
-};
-
-type Attachment = {
+interface Attachment {
   id: string;
   name: string;
-  url: string;
-  project_id: string;
+  description: string | null;
+  file_path: string;
+  file_type: string | null;
+  file_size: number | null;
   created_at: string;
-};
+  created_by: string;
+  project_id: string | null;
+  task_id: string | null;
+}
 
 const ProjectDetails = () => {
   useRequireAuth();
@@ -53,104 +37,78 @@ const ProjectDetails = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [note, setNote] = useState("");
+  const [unsavedNote, setUnsavedNote] = useState("");
+  const [taskTitle, setTaskTitle] = useState("");
+  const [fileDescription, setFileDescription] = useState("");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [isTaskOpen, setIsTaskOpen] = useState(false);
-  const [taskTitle, setTaskTitle] = useState("");
-  const [taskDescription, setTaskDescription] = useState("");
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
+  const [clientId, setClientId] = useState("");
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
-  const { data: project, isLoading } = useQuery({
+  const { data: project, isLoading: isLoadingProject } = useQuery({
     queryKey: ["project", id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("projects")
-        .select("*")
+        .select("*, clients(name)")
         .eq("id", id)
         .single();
       if (error) throw error;
       return data;
     },
-    onSuccess: (data) => {
-      setName(data?.name || "");
-      setDescription(data?.description || "");
-    },
   });
 
-  const { data: tasks } = useQuery({
+  const { data: tasks, isLoading: isLoadingTasks } = useQuery({
     queryKey: ["tasks", id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("tasks")
         .select("*")
-        .eq("project_id", id);
+        .eq("project_id", id)
+        .order('position', { ascending: true })
+        .order('created_at', { ascending: false });
       if (error) throw error;
       return data;
     },
   });
 
-  const { data: attachments } = useQuery({
+  const { data: attachments, isLoading: isLoadingAttachments } = useQuery<Attachment[]>({
     queryKey: ["attachments", id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("attachments")
         .select("*")
-        .eq("project_id", id);
+        .eq("project_id", id)
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
   });
 
-  const updateProjectMutation = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase
-        .from("projects")
-        .update({
-          name,
-          description,
-        })
-        .eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["project", id] });
-      setIsEditOpen(false);
-      toast({
-        title: "Progetto aggiornato",
-        description: "Il progetto è stato aggiornato con successo",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Errore",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const createTaskMutation = useMutation({
-    mutationFn: async () => {
+  const addTaskMutation = useMutation({
+    mutationFn: async (title: string) => {
+      const maxPosition = tasks?.reduce((max, task) => 
+        Math.max(max, task.position || 0), -1) ?? -1;
+      
       const { error } = await supabase.from("tasks").insert({
-        title: taskTitle,
-        description: taskDescription,
+        title,
         project_id: id,
+        created_by: (await supabase.auth.getUser()).data.user?.id,
+        status: "todo",
+        position: maxPosition + 1,
       });
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks", id] });
-      setIsTaskOpen(false);
       setTaskTitle("");
-      setTaskDescription("");
       toast({
-        title: "Task creato",
-        description: "Il task è stato creato con successo",
+        title: "Task aggiunto",
+        description: "Il task è stato aggiunto con successo",
       });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast({
         title: "Errore",
         description: error.message,
@@ -159,33 +117,22 @@ const ProjectDetails = () => {
     },
   });
 
-  const uploadFileMutation = useMutation({
-    mutationFn: async () => {
-      if (!selectedFile) return;
-      const { data, error } = await supabase.storage
-        .from("attachments")
-        .upload(`${id}/${selectedFile.name}`, selectedFile, {
-          cacheControl: "3600",
-          upsert: false,
-        });
+  const updateTaskStatusMutation = useMutation({
+    mutationFn: async ({ taskId, status }: { taskId: string; status: string }) => {
+      const { error } = await supabase
+        .from("tasks")
+        .update({ status })
+        .eq("id", taskId);
       if (error) throw error;
-
-      const { error: dbError } = await supabase.from("attachments").insert({
-        name: selectedFile.name,
-        url: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/attachments/${data?.path}`,
-        project_id: id,
-      });
-      if (dbError) throw dbError;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["attachments", id] });
-      setSelectedFile(null);
+      queryClient.invalidateQueries({ queryKey: ["tasks", id] });
       toast({
-        title: "File caricato",
-        description: "Il file è stato caricato con successo",
+        title: "Task aggiornato",
+        description: "Lo stato del task è stato aggiornato",
       });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast({
         title: "Errore",
         description: error.message,
@@ -196,10 +143,7 @@ const ProjectDetails = () => {
 
   const deleteTaskMutation = useMutation({
     mutationFn: async (taskId: string) => {
-      const { error } = await supabase
-        .from("tasks")
-        .delete()
-        .eq("id", taskId);
+      const { error } = await supabase.from("tasks").delete().eq("id", taskId);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -209,7 +153,7 @@ const ProjectDetails = () => {
         description: "Il task è stato eliminato con successo",
       });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast({
         title: "Errore",
         description: error.message,
@@ -218,13 +162,20 @@ const ProjectDetails = () => {
     },
   });
 
-  const deleteAttachmentMutation = useMutation({
-    mutationFn: async (attachmentId: string) => {
-      const { error } = await supabase
+  const deleteFileMutation = useMutation({
+    mutationFn: async (attachment: Attachment) => {
+      const { error: storageError } = await supabase.storage
+        .from("attachments")
+        .remove([attachment.file_path]);
+      
+      if (storageError) throw storageError;
+
+      const { error: dbError } = await supabase
         .from("attachments")
         .delete()
-        .eq("id", attachmentId);
-      if (error) throw error;
+        .eq("id", attachment.id);
+
+      if (dbError) throw dbError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["attachments", id] });
@@ -233,7 +184,7 @@ const ProjectDetails = () => {
         description: "Il file è stato eliminato con successo",
       });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast({
         title: "Errore",
         description: error.message,
@@ -242,40 +193,62 @@ const ProjectDetails = () => {
     },
   });
 
-  const deleteProjectMutation = useMutation({
-    mutationFn: async () => {
-      // Prima eliminiamo tutti i task associati
-      const { error: taskError } = await supabase
-        .from("tasks")
-        .delete()
-        .eq("project_id", id);
-      
-      if (taskError) throw taskError;
+  const uploadFileMutation = useMutation({
+    mutationFn: async ({ file, description }: { file: File; description: string }) => {
+      const fileExt = file.name.split(".").pop();
+      const filePath = `${Math.random()}.${fileExt}`;
 
-      // Poi eliminiamo tutti i file associati
-      const { error: fileError } = await supabase
+      const { error: uploadError } = await supabase.storage
         .from("attachments")
-        .delete()
-        .eq("project_id", id);
-      
-      if (fileError) throw fileError;
+        .upload(filePath, file);
 
-      // Infine eliminiamo il progetto
+      if (uploadError) throw uploadError;
+
+      const { error: dbError } = await supabase.from("attachments").insert({
+        name: file.name,
+        description,
+        file_path: filePath,
+        project_id: id,
+        created_by: (await supabase.auth.getUser()).data.user?.id,
+        file_type: file.type,
+        file_size: file.size,
+      });
+
+      if (dbError) throw dbError;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["attachments", id] });
+      setFileDescription("");
+      toast({
+        title: "File caricato",
+        description: "Il file è stato caricato con successo",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Errore",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const saveNotesMutation = useMutation({
+    mutationFn: async (notes: string) => {
       const { error } = await supabase
         .from("projects")
-        .delete()
+        .update({ description: notes })
         .eq("id", id);
-      
       if (error) throw error;
     },
     onSuccess: () => {
-      navigate("/projects");
+      queryClient.invalidateQueries({ queryKey: ["project", id] });
       toast({
-        title: "Progetto eliminato",
-        description: "Il progetto e tutti i suoi contenuti sono stati eliminati con successo",
+        title: "Note salvate",
+        description: "Le note sono state salvate con successo",
       });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast({
         title: "Errore",
         description: error.message,
@@ -284,242 +257,359 @@ const ProjectDetails = () => {
     },
   });
 
-  const handleEditSubmit = (e: React.FormEvent) => {
+  const getTaskStatusColor = (status: string) => {
+    switch (status) {
+      case "completed":
+        return "border-l-4 border-l-green-500";
+      case "in_progress":
+        return "border-l-4 border-l-orange-500";
+      case "todo":
+        return "border-l-4 border-l-red-500";
+      default:
+        return "border-l-4 border-l-gray-300";
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      uploadFileMutation.mutate({ file, description: fileDescription });
+    }
+  };
+
+  const handleAddTask = (e: React.FormEvent) => {
     e.preventDefault();
-    updateProjectMutation.mutate();
+    if (taskTitle.trim()) {
+      addTaskMutation.mutate(taskTitle);
+    }
   };
 
-  const handleTaskSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    createTaskMutation.mutate();
+  const getFileUrl = async (filePath: string) => {
+    const { data } = await supabase.storage
+      .from("attachments")
+      .createSignedUrl(filePath, 3600);
+    if (data?.signedUrl) {
+      window.open(data.signedUrl, "_blank");
+    }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) return;
-    setSelectedFile(e.target.files[0]);
+  const onDragEnd = (result: any) => {
+    if (!result.destination) return;
+
+    const items = Array.from(tasks || []);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    queryClient.setQueryData(["tasks", id], items.map((item, index) => ({
+      ...item,
+      position: index
+    })));
+
+    Promise.all(
+      items.map((task, index) =>
+        supabase
+          .from("tasks")
+          .update({ position: index })
+          .eq("id", task.id)
+      )
+    ).catch((error) => {
+      toast({
+        title: "Errore",
+        description: "Errore durante l'aggiornamento dell'ordine dei task",
+        variant: "destructive",
+      });
+      queryClient.invalidateQueries({ queryKey: ["tasks", id] });
+    });
   };
 
-  const handleFileUpload = () => {
-    uploadFileMutation.mutate();
-  };
-
-  const handleDeleteTask = (taskId: string) => {
-    deleteTaskMutation.mutate(taskId);
-  };
-
-  const handleDeleteAttachment = (attachmentId: string) => {
-    deleteAttachmentMutation.mutate(attachmentId);
-  };
-
-  if (isLoading) {
-    return <div>Caricamento...</div>;
-  }
-
-  if (!project) {
-    return <div>Progetto non trovato</div>;
+  if (isLoadingProject) {
+    return (
+      <Layout>
+        <div>Caricamento...</div>
+      </Layout>
+    );
   }
 
   return (
     <Layout>
       <div className="container mx-auto py-6 space-y-6">
-        <Button variant="ghost" onClick={() => navigate("/projects")}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Indietro
-        </Button>
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            className="gap-2"
+            onClick={() => navigate("/projects")}
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Torna ai progetti
+          </Button>
+          <h1 className="text-2xl font-bold flex-1">{project?.name}</h1>
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={() => {
+              setName(project?.name || "");
+              setDescription(project?.description || "");
+              setClientId(project?.client_id || "");
+              setIsEditOpen(true);
+            }}
+          >
+            <Settings className="h-4 w-4" />
+            Impostazioni progetto
+          </Button>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold">{project.name}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">{project.description}</p>
-          </CardContent>
-        </Card>
-
-        <Tabs defaultValue="tasks" className="space-y-4">
+        <Tabs defaultValue="tasks" className="w-full">
           <TabsList>
-            <TabsTrigger value="tasks">Tasks</TabsTrigger>
-            <TabsTrigger value="attachments">Allegati</TabsTrigger>
-            <TabsTrigger value="settings">Impostazioni</TabsTrigger>
+            <TabsTrigger value="tasks">Task</TabsTrigger>
+            <TabsTrigger value="files">File</TabsTrigger>
+            <TabsTrigger value="notes">Note</TabsTrigger>
           </TabsList>
+
           <TabsContent value="tasks" className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Tasks</h2>
-              <Button onClick={() => setIsTaskOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Nuovo Task
-              </Button>
-            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Nuovo Task</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleAddTask} className="flex gap-2">
+                  <Input
+                    value={taskTitle}
+                    onChange={(e) => setTaskTitle(e.target.value)}
+                    placeholder="Titolo del task..."
+                    required
+                  />
+                  <Button type="submit">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Aggiungi
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            <DragDropContext onDragEnd={onDragEnd}>
+              <Droppable droppableId="tasks">
+                {(provided) => (
+                  <div
+                    {...provided.droppableProps}
+                    ref={provided.innerRef}
+                    className="grid gap-4"
+                  >
+                    {isLoadingTasks ? (
+                      <div>Caricamento task...</div>
+                    ) : (
+                      tasks?.map((task, index) => (
+                        <Draggable key={task.id} draggableId={task.id} index={index}>
+                          {(provided) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                            >
+                              <Card className={cn("overflow-hidden", getTaskStatusColor(task.status))}>
+                                <CardContent className="p-4">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <ListTodo className="h-4 w-4 text-muted-foreground" />
+                                      <span>{task.title}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <Select
+                                        value={task.status}
+                                        onValueChange={(value) =>
+                                          updateTaskStatusMutation.mutate({
+                                            taskId: task.id,
+                                            status: value,
+                                          })
+                                        }
+                                      >
+                                        <SelectTrigger className="w-[180px]">
+                                          <SelectValue placeholder="Seleziona stato" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="todo">Da fare</SelectItem>
+                                          <SelectItem value="in_progress">In lavorazione</SelectItem>
+                                          <SelectItem value="completed">Completato</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => deleteTaskMutation.mutate(task.id)}
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            </div>
+                          )}
+                        </Draggable>
+                      ))
+                    )}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </DragDropContext>
+          </TabsContent>
+
+          <TabsContent value="files" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Carica File</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Input
+                  value={fileDescription}
+                  onChange={(e) => setFileDescription(e.target.value)}
+                  placeholder="Descrizione del file..."
+                />
+                <Input
+                  type="file"
+                  onChange={handleFileUpload}
+                  className="max-w-sm"
+                />
+              </CardContent>
+            </Card>
+
             <div className="grid gap-4">
-              {tasks?.map((task) => (
-                <Card key={task.id}>
-                  <CardContent className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold">{task.title}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {task.description}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Status: {task.status}
-                      </p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteTask(task.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
+              {isLoadingAttachments ? (
+                <div>Caricamento file...</div>
+              ) : (
+                attachments?.map((attachment) => (
+                  <Card key={attachment.id}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <Paperclip className="h-4 w-4 text-muted-foreground" />
+                            <span className="font-medium">{attachment.name}</span>
+                          </div>
+                          {attachment.description && (
+                            <p className="text-sm text-muted-foreground">
+                              {attachment.description}
+                            </p>
+                          )}
+                          <p className="text-sm text-muted-foreground">
+                            Caricato il{" "}
+                            {format(
+                              new Date(attachment.created_at),
+                              "dd/MM/yyyy HH:mm"
+                            )}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => getFileUrl(attachment.file_path)}
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteFileMutation.mutate(attachment);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
             </div>
           </TabsContent>
-          <TabsContent value="attachments" className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Allegati</h2>
-            </div>
-            <div className="grid gap-4">
-              <div className="flex items-center gap-2">
-                <Input type="file" id="file" onChange={handleFileChange} />
-                <Button onClick={handleFileUpload} disabled={!selectedFile}>
-                  <Paperclip className="h-4 w-4 mr-2" />
-                  Carica File
+
+          <TabsContent value="notes" className="space-y-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Note del Progetto</CardTitle>
+                <Button 
+                  onClick={() => {
+                    saveNotesMutation.mutate(unsavedNote);
+                    setNote(unsavedNote);
+                  }}
+                  className="gap-2"
+                >
+                  <Save className="h-4 w-4" />
+                  Salva
                 </Button>
-              </div>
-              {attachments?.map((attachment) => (
-                <Card key={attachment.id}>
-                  <CardContent className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold">{attachment.name}</h3>
-                      <a
-                        href={attachment.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-muted-foreground hover:underline"
-                      >
-                        <Download className="h-4 w-4 mr-2 inline-block" />
-                        Scarica
-                      </a>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteAttachment(attachment.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-          <TabsContent value="settings" className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Impostazioni Progetto</h2>
-              <Button onClick={() => setIsEditOpen(true)}>
-                <Settings className="h-4 w-4 mr-2" />
-                Modifica
-              </Button>
-            </div>
+              </CardHeader>
+              <CardContent>
+                <Editor
+                  value={project?.description || ""}
+                  onChange={(value) => setUnsavedNote(value)}
+                />
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
 
-        <Sheet open={isTaskOpen} onOpenChange={setIsTaskOpen}>
-          <SheetContent>
-            <SheetHeader>
-              <SheetTitle>Nuovo Task</SheetTitle>
-            </SheetHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="title">Titolo</Label>
-                <Input
-                  id="title"
-                  placeholder="Titolo del task"
-                  value={taskTitle}
-                  onChange={(e) => setTaskTitle(e.target.value)}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="description">Descrizione</Label>
-                <Input
-                  id="description"
-                  placeholder="Descrizione del task"
-                  value={taskDescription}
-                  onChange={(e) => setTaskDescription(e.target.value)}
-                />
-              </div>
-            </div>
-            <Button onClick={handleTaskSubmit}>Crea Task</Button>
-          </SheetContent>
-        </Sheet>
-
         <Sheet open={isEditOpen} onOpenChange={setIsEditOpen}>
-          <SheetContent>
+          <SheetContent className="w-full max-w-md">
             <SheetHeader>
               <SheetTitle>Impostazioni Progetto</SheetTitle>
             </SheetHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="name">Nome</Label>
+            <CardContent>
+              <div className="space-y-4 py-4">
                 <Input
-                  id="name"
-                  placeholder="Nome del progetto"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  placeholder="Nome del progetto"
                 />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="description">Descrizione</Label>
                 <Input
-                  id="description"
-                  placeholder="Descrizione del progetto"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Descrizione del progetto"
+                />
+                <Input
+                  value={clientId}
+                  onChange={(e) => setClientId(e.target.value)}
+                  placeholder="ID cliente"
                 />
               </div>
-            </div>
-            <SheetFooter className="flex flex-col gap-4 sm:flex-col">
-              <Button onClick={handleEditSubmit} className="w-full">Aggiorna Progetto</Button>
-              <Button 
-                variant="destructive" 
-                className="w-full gap-2"
-                onClick={() => setShowDeleteAlert(true)}
+            </CardContent>
+            <SheetFooter>
+              <Button variant="outline" onClick={() => setIsEditOpen(false)}>
+                Annulla
+              </Button>
+              <Button
+                variant="default"
+                onClick={async () => {
+                  try {
+                    const { error } = await supabase
+                      .from("projects")
+                      .update({ name, description, client_id: clientId })
+                      .eq("id", id);
+                    
+                    if (error) throw error;
+                    
+                    queryClient.invalidateQueries({ queryKey: ["project", id] });
+                    toast({
+                      title: "Progetto aggiornato",
+                      description: "Le impostazioni del progetto sono state aggiornate",
+                    });
+                    setIsEditOpen(false);
+                  } catch (error: any) {
+                    toast({
+                      title: "Errore",
+                      description: error.message,
+                      variant: "destructive",
+                    });
+                  }
+                }}
               >
-                <Trash2 className="h-4 w-4" />
-                Elimina Progetto
+                Salva
               </Button>
             </SheetFooter>
           </SheetContent>
         </Sheet>
-
-        <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-destructive" />
-                Conferma eliminazione
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                Stai per eliminare questo progetto. Questa azione eliminerà anche tutti i task e i file associati.
-                <br /><br />
-                <strong>Attenzione:</strong> Questa azione non può essere annullata. Tutti i dati verranno persi definitivamente.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Annulla</AlertDialogCancel>
-              <AlertDialogAction
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                onClick={() => {
-                  setShowDeleteAlert(false);
-                  deleteProjectMutation.mutate();
-                }}
-              >
-                Elimina tutto
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </div>
     </Layout>
   );
