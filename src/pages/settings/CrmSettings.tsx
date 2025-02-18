@@ -18,8 +18,13 @@ interface CrmSettings {
   app_name: string;
 }
 
-interface UserProfile {
+interface Profile {
   id: string;
+  avatar_url: string | null;
+  created_at: string;
+  first_name: string | null;
+  last_name: string | null;
+  notes: string | null;
   primary_color: string;
 }
 
@@ -70,7 +75,7 @@ export default function CrmSettings() {
         .single();
 
       if (error) throw error;
-      return data as UserProfile;
+      return data as Profile;
     },
   });
 
@@ -102,7 +107,9 @@ export default function CrmSettings() {
       // Aggiorna il colore primario nel profilo utente
       const { error: profileError } = await supabase
         .from("profiles")
-        .update({ primary_color: data.primary_color })
+        .update({
+          primary_color: data.primary_color
+        })
         .eq("id", user.id);
 
       if (profileError) throw profileError;

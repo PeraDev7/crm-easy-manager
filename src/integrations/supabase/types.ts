@@ -347,6 +347,7 @@ export type Database = {
           id: string
           last_name: string | null
           notes: string | null
+          primary_color: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -355,6 +356,7 @@ export type Database = {
           id: string
           last_name?: string | null
           notes?: string | null
+          primary_color?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -363,6 +365,7 @@ export type Database = {
           id?: string
           last_name?: string | null
           notes?: string | null
+          primary_color?: string | null
         }
         Relationships: []
       }
