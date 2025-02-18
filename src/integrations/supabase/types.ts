@@ -171,6 +171,30 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_settings: {
+        Row: {
+          app_name: string
+          created_at: string
+          created_by: string
+          dark_mode: boolean
+          id: string
+        }
+        Insert: {
+          app_name?: string
+          created_at?: string
+          created_by: string
+          dark_mode?: boolean
+          id?: string
+        }
+        Update: {
+          app_name?: string
+          created_at?: string
+          created_by?: string
+          dark_mode?: boolean
+          id?: string
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           color: string | null

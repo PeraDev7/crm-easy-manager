@@ -11,10 +11,15 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 
-type CrmSettingsForm = {
+interface CrmSettings {
+  id: string;
+  created_at: string;
+  created_by: string;
   app_name: string;
   dark_mode: boolean;
-};
+}
+
+type CrmSettingsForm = Pick<CrmSettings, 'app_name' | 'dark_mode'>;
 
 export default function CrmSettings() {
   const { toast } = useToast();
@@ -29,13 +34,16 @@ export default function CrmSettings() {
         .single();
 
       if (error) throw error;
-      return data;
+      return data as CrmSettings;
     },
   });
 
   React.useEffect(() => {
     if (settings) {
-      form.reset(settings);
+      form.reset({
+        app_name: settings.app_name,
+        dark_mode: settings.dark_mode,
+      });
     } else {
       // Default values
       form.reset({
@@ -50,22 +58,15 @@ export default function CrmSettings() {
       const user = (await supabase.auth.getUser()).data.user;
       if (!user) throw new Error("User not found");
 
-      if (settings) {
-        // Update
-        const { error } = await supabase
-          .from("crm_settings")
-          .update(data)
-          .eq("id", settings.id);
+      const { error } = await supabase
+        .from("crm_settings")
+        .upsert({
+          ...data,
+          created_by: user.id,
+          ...(settings?.id ? { id: settings.id } : {}),
+        });
 
-        if (error) throw error;
-      } else {
-        // Insert
-        const { error } = await supabase
-          .from("crm_settings")
-          .insert([{ ...data, created_by: user.id }]);
-
-        if (error) throw error;
-      }
+      if (error) throw error;
 
       toast({
         title: "Impostazioni salvate",
