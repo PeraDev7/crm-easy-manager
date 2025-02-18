@@ -45,7 +45,6 @@ type QuoteItem = {
 
 const formSchema = z.object({
   client_id: z.string().min(1, "Il cliente è obbligatorio"),
-  quote_number: z.string().min(1, "Il numero preventivo è obbligatorio"),
   date: z.string().min(1, "La data è obbligatoria"),
   expiry_date: z.string().optional().nullable(),
   notes: z.string().optional(),
@@ -65,7 +64,6 @@ export function CreateQuoteSheet({ open, onOpenChange }: CreateQuoteSheetProps) 
     resolver: zodResolver(formSchema),
     defaultValues: {
       client_id: "",
-      quote_number: "",
       date: new Date().toISOString().split("T")[0],
       expiry_date: "",
       notes: "",
@@ -81,6 +79,25 @@ export function CreateQuoteSheet({ open, onOpenChange }: CreateQuoteSheetProps) 
         .order("name");
       if (error) throw error;
       return data;
+    },
+  });
+
+  const { data: lastQuoteNumber } = useQuery({
+    queryKey: ["lastQuoteNumber"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("quotes")
+        .select("quote_number")
+        .order("created_at", { ascending: false })
+        .limit(1);
+      
+      if (error) throw error;
+      
+      if (data && data.length > 0) {
+        const lastNumber = parseInt(data[0].quote_number.split("-")[1]);
+        return `PRE-${String(lastNumber + 1).padStart(3, "0")}`;
+      }
+      return "PRE-001";
     },
   });
 
@@ -104,7 +121,6 @@ export function CreateQuoteSheet({ open, onOpenChange }: CreateQuoteSheetProps) 
     return { subtotal, taxAmount, total };
   };
 
-  // Aggiorniamo i totali quando cambiano gli items
   useEffect(() => {
     setTotals(calculateTotals(items));
   }, [items]);
@@ -113,6 +129,15 @@ export function CreateQuoteSheet({ open, onOpenChange }: CreateQuoteSheetProps) 
     try {
       const user = (await supabase.auth.getUser()).data.user;
       if (!user) throw new Error("User not found");
+
+      if (!lastQuoteNumber) {
+        toast({
+          title: "Errore",
+          description: "Errore nella generazione del numero preventivo",
+          variant: "destructive",
+        });
+        return;
+      }
 
       // Validate items
       if (!items.every(item => item.description.trim())) {
@@ -129,7 +154,7 @@ export function CreateQuoteSheet({ open, onOpenChange }: CreateQuoteSheetProps) 
         .from("quotes")
         .insert({
           client_id: values.client_id,
-          quote_number: values.quote_number,
+          quote_number: lastQuoteNumber,
           date: values.date,
           expiry_date: values.expiry_date || null,
           notes: values.notes,
@@ -164,6 +189,7 @@ export function CreateQuoteSheet({ open, onOpenChange }: CreateQuoteSheetProps) 
       });
 
       queryClient.invalidateQueries({ queryKey: ["quotes"] });
+      queryClient.invalidateQueries({ queryKey: ["lastQuoteNumber"] });
       onOpenChange(false);
       form.reset();
       setItems([{ description: "", quantity: 1, unit_price: 0 }]);
@@ -215,19 +241,14 @@ export function CreateQuoteSheet({ open, onOpenChange }: CreateQuoteSheetProps) 
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="quote_number"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Numero Preventivo</FormLabel>
-                    <FormControl>
-                      <Input placeholder="es. PRE-001" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="space-y-2">
+                <FormLabel>Numero Preventivo</FormLabel>
+                <Input
+                  value={lastQuoteNumber || ""}
+                  disabled
+                  className="bg-muted"
+                />
+              </div>
 
               <FormField
                 control={form.control}
