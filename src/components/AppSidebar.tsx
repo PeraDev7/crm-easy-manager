@@ -1,11 +1,11 @@
+
 import {
   LayoutDashboard,
   Settings,
   Users,
-  FileInvoice,
+  FileText,
   Calendar,
   KanbanSquare,
-  LucideIcon,
   Plus,
 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -67,7 +67,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
               <Link to="/invoices">
-                <FileInvoice className="w-4 h-4" />
+                <FileText className="w-4 h-4" />
                 <span>Fatture</span>
               </Link>
             </SidebarMenuButton>
@@ -76,7 +76,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
               <Link to="/quotes">
-                <FileInvoice className="w-4 h-4" />
+                <FileText className="w-4 h-4" />
                 <span>Preventivi</span>
               </Link>
             </SidebarMenuButton>

@@ -1,16 +1,13 @@
+
 import React from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Quotes from "./pages/Quotes";
 import Clients from "./pages/Clients";
 import Projects from "./pages/Projects";
 import Leads from "./pages/Leads";
-import Tasks from "./pages/Tasks";
 import Calendar from "./pages/Calendar";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "./App.css";
-import { AuthProvider } from "./components/AuthProvider";
-import Login from "./pages/Login";
-import { RequireAuth } from "./components/RequireAuth";
 import Invoices from "./pages/Invoices";
 import Settings from "./pages/Settings";
 
@@ -18,72 +15,32 @@ const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
   {
-    path: "/login",
-    element: <Login />,
-  },
-  {
     path: "/",
-    element: (
-      <RequireAuth>
-        <Quotes />
-      </RequireAuth>
-    ),
+    element: <Quotes />,
   },
   {
     path: "/quotes",
-    element: (
-      <RequireAuth>
-        <Quotes />
-      </RequireAuth>
-    ),
+    element: <Quotes />,
   },
   {
     path: "/clients",
-    element: (
-      <RequireAuth>
-        <Clients />
-      </RequireAuth>
-    ),
+    element: <Clients />,
   },
   {
     path: "/projects",
-    element: (
-      <RequireAuth>
-        <Projects />
-      </RequireAuth>
-    ),
+    element: <Projects />,
   },
   {
     path: "/invoices",
-    element: (
-      <RequireAuth>
-        <Invoices />
-      </RequireAuth>
-    ),
+    element: <Invoices />,
   },
   {
     path: "/leads",
-    element: (
-      <RequireAuth>
-        <Leads />
-      </RequireAuth>
-    ),
-  },
-  {
-    path: "/tasks",
-    element: (
-      <RequireAuth>
-        <Tasks />
-      </RequireAuth>
-    ),
+    element: <Leads />,
   },
   {
     path: "/calendar",
-    element: (
-      <RequireAuth>
-        <Calendar />
-      </RequireAuth>
-    ),
+    element: <Calendar />,
   },
   {
     path: "/settings",
@@ -93,10 +50,8 @@ const router = createBrowserRouter([
 
 function App() {
   return (
-    <QueryClientProvider value={queryClient}>
-      <AuthProvider>
-        <RouterProvider router={router} />
-      </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={router} />
     </QueryClientProvider>
   );
 }
