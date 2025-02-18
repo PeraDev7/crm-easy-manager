@@ -1,5 +1,5 @@
 
-import { formatDistanceToNow } from "date-fns";
+import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -45,10 +45,7 @@ export function QuoteTableRow({
         {quote.client?.business_name || quote.client?.name || "N/D"}
       </TableCell>
       <TableCell>
-        {formatDistanceToNow(new Date(quote.date), {
-          addSuffix: true,
-          locale: it,
-        })}
+        {format(new Date(quote.date), "d MMMM yyyy", { locale: it })}
       </TableCell>
       <TableCell>€ {quote.total.toFixed(2)}</TableCell>
       <TableCell>

@@ -10,11 +10,11 @@ import { EditQuoteSheet } from "./EditQuoteSheet";
 import { ViewQuoteSheet } from "./ViewQuoteSheet";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { QuoteTableRow } from "./QuoteTableRow";
 import { DeleteQuoteDialog } from "./DeleteQuoteDialog";
 import { generateQuotePDF } from "@/utils/generateQuotePDF";
+import { SearchBar } from "@/components/SearchBar";
 
 type Quote = {
   id: string;
@@ -38,12 +38,13 @@ export function QuotesList({ quotes }: QuotesListProps) {
   const [quoteToDelete, setQuoteToDelete] = useState<string | null>(null);
   const [editQuoteId, setEditQuoteId] = useState<string | null>(null);
   const [viewQuoteId, setViewQuoteId] = useState<string | null>(null);
+  const [quoteNumberFilter, setQuoteNumberFilter] = useState("");
+  const [clientFilter, setClientFilter] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const handleDelete = async (id: string) => {
     try {
-      // Delete quote items first
       const { error: itemsError } = await supabase
         .from("quote_items")
         .delete()
@@ -51,7 +52,6 @@ export function QuotesList({ quotes }: QuotesListProps) {
 
       if (itemsError) throw itemsError;
 
-      // Then delete the quote
       const { error: quoteError } = await supabase
         .from("quotes")
         .delete()
@@ -77,7 +77,6 @@ export function QuotesList({ quotes }: QuotesListProps) {
 
   const handleDownload = async (id: string) => {
     try {
-      // Fetch the complete quote data
       const { data: quote, error: quoteError } = await supabase
         .from("quotes")
         .select(`
@@ -90,7 +89,6 @@ export function QuotesList({ quotes }: QuotesListProps) {
       
       if (quoteError) throw quoteError;
 
-      // Fetch company settings
       const { data: companySettings, error: settingsError } = await supabase
         .from("company_settings")
         .select("*")
@@ -98,7 +96,6 @@ export function QuotesList({ quotes }: QuotesListProps) {
       
       if (settingsError) throw settingsError;
 
-      // Generate and download PDF
       generateQuotePDF(quote, companySettings);
     } catch (error) {
       console.error("Error downloading quote:", error);
@@ -110,36 +107,62 @@ export function QuotesList({ quotes }: QuotesListProps) {
     }
   };
 
+  const filteredQuotes = quotes.filter((quote) => {
+    const matchQuoteNumber = quote.quote_number.toLowerCase().includes(quoteNumberFilter.toLowerCase());
+    const matchClient = quote.client
+      ? (quote.client.business_name?.toLowerCase() || quote.client.name.toLowerCase()).includes(clientFilter.toLowerCase())
+      : false;
+    
+    return matchQuoteNumber && matchClient;
+  });
+
   return (
     <>
-      <div className="border rounded-lg">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Numero</TableHead>
-              <TableHead>Cliente</TableHead>
-              <TableHead>Data</TableHead>
-              <TableHead>Totale</TableHead>
-              <TableHead>Stato</TableHead>
-              <TableHead className="text-right">Azioni</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {quotes.map((quote) => (
-              <QuoteTableRow
-                key={quote.id}
-                quote={quote}
-                onView={(id) => setViewQuoteId(id)}
-                onEdit={(id) => setEditQuoteId(id)}
-                onDelete={(id) => {
-                  setQuoteToDelete(id);
-                  setDeleteDialogOpen(true);
-                }}
-                onDownload={handleDownload}
-              />
-            ))}
-          </TableBody>
-        </Table>
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <SearchBar
+            label="Cerca per numero preventivo"
+            placeholder="Inserisci il numero..."
+            value={quoteNumberFilter}
+            onChange={setQuoteNumberFilter}
+          />
+          <SearchBar
+            label="Cerca per cliente"
+            placeholder="Inserisci il nome del cliente..."
+            value={clientFilter}
+            onChange={setClientFilter}
+          />
+        </div>
+
+        <div className="border rounded-lg">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Numero</TableHead>
+                <TableHead>Cliente</TableHead>
+                <TableHead>Data</TableHead>
+                <TableHead>Totale</TableHead>
+                <TableHead>Stato</TableHead>
+                <TableHead className="text-right">Azioni</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredQuotes.map((quote) => (
+                <QuoteTableRow
+                  key={quote.id}
+                  quote={quote}
+                  onView={(id) => setViewQuoteId(id)}
+                  onEdit={(id) => setEditQuoteId(id)}
+                  onDelete={(id) => {
+                    setQuoteToDelete(id);
+                    setDeleteDialogOpen(true);
+                  }}
+                  onDownload={handleDownload}
+                />
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
       <DeleteQuoteDialog
