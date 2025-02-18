@@ -10,12 +10,17 @@ import QuotesSettings from "./pages/settings/QuotesSettings";
 import CrmSettings from "./pages/settings/CrmSettings";
 import UserSettings from "./pages/settings/UserSettings";
 import Quotes from "./pages/Quotes";
+import Auth from "./pages/Auth";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "./App.css";
 
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
+  {
+    path: "/auth",
+    element: <Auth />,
+  },
   {
     path: "/",
     element: <Dashboard />,
