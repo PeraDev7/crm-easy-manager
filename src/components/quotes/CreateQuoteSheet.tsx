@@ -16,6 +16,7 @@ import {
   FormField,
   FormItem,
   FormLabel,
+  FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
@@ -28,6 +29,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 
 interface CreateQuoteSheetProps {
   open: boolean;
@@ -40,13 +43,15 @@ type QuoteItem = {
   unit_price: number;
 };
 
-type QuoteFormValues = {
-  client_id: string;
-  quote_number: string;
-  date: string;
-  expiry_date: string;
-  notes: string;
-};
+const formSchema = z.object({
+  client_id: z.string().min(1, "Il cliente è obbligatorio"),
+  quote_number: z.string().min(1, "Il numero preventivo è obbligatorio"),
+  date: z.string().min(1, "La data è obbligatoria"),
+  expiry_date: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+type QuoteFormValues = z.infer<typeof formSchema>;
 
 export function CreateQuoteSheet({ open, onOpenChange }: CreateQuoteSheetProps) {
   const [items, setItems] = useState<QuoteItem[]>([
@@ -56,6 +61,7 @@ export function CreateQuoteSheet({ open, onOpenChange }: CreateQuoteSheetProps) 
   const queryClient = useQueryClient();
   
   const form = useForm<QuoteFormValues>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       client_id: "",
       quote_number: "",
@@ -90,7 +96,7 @@ export function CreateQuoteSheet({ open, onOpenChange }: CreateQuoteSheetProps) 
       (sum, item) => sum + item.quantity * item.unit_price,
       0
     );
-    const taxRate = 22; // TODO: Rendere configurabile
+    const taxRate = 22;
     const taxAmount = (subtotal * taxRate) / 100;
     const total = subtotal + taxAmount;
 
@@ -103,6 +109,16 @@ export function CreateQuoteSheet({ open, onOpenChange }: CreateQuoteSheetProps) 
       if (!user) throw new Error("User not found");
 
       const { subtotal, taxAmount, total } = calculateTotals(items);
+
+      // Validate items
+      if (!items.every(item => item.description.trim())) {
+        toast({
+          title: "Errore",
+          description: "La descrizione è obbligatoria per tutte le voci",
+          variant: "destructive",
+        });
+        return;
+      }
 
       // Create quote
       const { data: quote, error: quoteError } = await supabase
@@ -188,6 +204,7 @@ export function CreateQuoteSheet({ open, onOpenChange }: CreateQuoteSheetProps) 
                         ))}
                       </SelectContent>
                     </Select>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -201,6 +218,7 @@ export function CreateQuoteSheet({ open, onOpenChange }: CreateQuoteSheetProps) 
                     <FormControl>
                       <Input placeholder="es. PRE-001" {...field} />
                     </FormControl>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -214,6 +232,7 @@ export function CreateQuoteSheet({ open, onOpenChange }: CreateQuoteSheetProps) 
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -227,6 +246,7 @@ export function CreateQuoteSheet({ open, onOpenChange }: CreateQuoteSheetProps) 
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -306,6 +326,7 @@ export function CreateQuoteSheet({ open, onOpenChange }: CreateQuoteSheetProps) 
                   <FormControl>
                     <Textarea placeholder="Note aggiuntive..." {...field} />
                   </FormControl>
+                  <FormMessage />
                 </FormItem>
               )}
             />
