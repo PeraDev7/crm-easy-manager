@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Editor } from "@/components/ui/editor";
+import { Separator } from "@/components/ui/separator";
 import {
   Select,
   SelectContent,
@@ -12,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FileText, Plus, Trash2 } from "lucide-react";
+import { FileText, Plus, Settings, Trash2 } from "lucide-react";
 
 interface QuoteItem {
   description: string;
@@ -38,6 +39,7 @@ export function CreateQuoteForm({
   const [footerText, setFooterText] = useState("");
   const [fontSize, setFontSize] = useState("medium");
   const [logoUrl, setLogoUrl] = useState("");
+  const [showOptions, setShowOptions] = useState(false);
   const { toast } = useToast();
 
   const addItem = () => {
@@ -88,31 +90,56 @@ export function CreateQuoteForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-4">
-        <div className="grid gap-4">
-          <div>
-            <Label htmlFor="logo">URL Logo</Label>
-            <Input
-              id="logo"
-              value={logoUrl}
-              onChange={(e) => setLogoUrl(e.target.value)}
-              placeholder="Inserisci l'URL del logo..."
-            />
+      <div className="space-y-6">
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          onClick={() => setShowOptions(!showOptions)}
+        >
+          <Settings className="w-4 h-4 mr-2" />
+          Opzioni Preventivo
+        </Button>
+
+        {showOptions && (
+          <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+            <h3 className="font-medium">Personalizzazione</h3>
+            <div className="grid gap-4">
+              <div>
+                <Label htmlFor="logo">URL Logo</Label>
+                <Input
+                  id="logo"
+                  value={logoUrl}
+                  onChange={(e) => setLogoUrl(e.target.value)}
+                  placeholder="Inserisci l'URL del logo..."
+                />
+              </div>
+              <div>
+                <Label htmlFor="fontSize">Dimensione Font</Label>
+                <Select value={fontSize} onValueChange={setFontSize}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleziona dimensione font" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="small">Piccolo</SelectItem>
+                    <SelectItem value="medium">Medio</SelectItem>
+                    <SelectItem value="large">Grande</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="footerText">Testo in calce</Label>
+                <Editor
+                  value={footerText}
+                  onChange={setFooterText}
+                  className="min-h-[100px]"
+                />
+              </div>
+            </div>
           </div>
-          <div>
-            <Label htmlFor="fontSize">Dimensione Font</Label>
-            <Select value={fontSize} onValueChange={setFontSize}>
-              <SelectTrigger>
-                <SelectValue placeholder="Seleziona dimensione font" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="small">Piccolo</SelectItem>
-                <SelectItem value="medium">Medio</SelectItem>
-                <SelectItem value="large">Grande</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+        )}
+
+        <Separator />
 
         <div className="space-y-4">
           <div className="flex items-center justify-between">
@@ -188,15 +215,6 @@ export function CreateQuoteForm({
               )}
             </div>
           ))}
-        </div>
-
-        <div>
-          <Label htmlFor="footerText">Testo in calce</Label>
-          <Editor
-            value={footerText}
-            onChange={setFooterText}
-            className="min-h-[100px]"
-          />
         </div>
 
         <div className="flex justify-between items-center pt-4">

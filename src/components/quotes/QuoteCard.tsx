@@ -1,6 +1,6 @@
 
 import { format } from "date-fns";
-import { FileText, Pencil, Trash2 } from "lucide-react";
+import { FileText, Pencil, Trash2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -20,9 +20,12 @@ interface QuoteCardProps {
     };
   };
   onConvert: (id: string) => void;
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
+  onDownload: (id: string) => void;
 }
 
-export function QuoteCard({ quote, onConvert }: QuoteCardProps) {
+export function QuoteCard({ quote, onConvert, onEdit, onDelete, onDownload }: QuoteCardProps) {
   return (
     <Card>
       <CardContent className="p-6">
@@ -58,10 +61,25 @@ export function QuoteCard({ quote, onConvert }: QuoteCardProps) {
                 Converti in Fattura
               </Button>
             )}
-            <Button variant="ghost" size="icon">
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={() => onDownload(quote.id)}
+            >
+              <Download className="h-4 w-4" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => onEdit(quote.id)}
+            >
               <Pencil className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => onDelete(quote.id)}
+            >
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>

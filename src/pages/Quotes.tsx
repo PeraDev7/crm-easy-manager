@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Layout } from "@/components/Layout";
@@ -50,7 +49,6 @@ const Quotes = () => {
 
   const createQuoteMutation = useMutation({
     mutationFn: async (values: any) => {
-      // Creare il preventivo
       const { data: quote, error: quoteError } = await supabase
         .from("quotes")
         .insert({
@@ -67,7 +65,6 @@ const Quotes = () => {
 
       if (quoteError) throw quoteError;
 
-      // Creare gli elementi del preventivo
       const quoteItems = values.items.map((item: any) => ({
         quote_id: quote.id,
         description: item.description,
@@ -102,9 +99,44 @@ const Quotes = () => {
     },
   });
 
+  const deleteQuoteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("quotes").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["quotes"] });
+      toast({
+        title: "Preventivo eliminato",
+        description: "Il preventivo è stato eliminato con successo",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Errore",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleProjectSelect = (project: any) => {
     setSelectedProject(project);
     setIsOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm("Sei sicuro di voler eliminare questo preventivo?")) {
+      deleteQuoteMutation.mutate(id);
+    }
+  };
+
+  const handleEdit = (id: string) => {
+    console.log("Edit quote:", id);
+  };
+
+  const handleDownload = async (id: string) => {
+    console.log("Download quote:", id);
   };
 
   const filteredQuotes = quotes?.filter((quote) =>
@@ -116,18 +148,10 @@ const Quotes = () => {
       <div className="container mx-auto py-6 space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold">Preventivi</h1>
-          <div className="flex gap-2">
-            {projects?.map((project) => (
-              <Button
-                key={project.id}
-                onClick={() => handleProjectSelect(project)}
-                variant="outline"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Nuovo per {project.name}
-              </Button>
-            ))}
-          </div>
+          <Button onClick={() => handleProjectSelect(projects?.[0])}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nuovo Preventivo
+          </Button>
         </div>
 
         <SearchBar
@@ -146,6 +170,9 @@ const Quotes = () => {
                 key={quote.id}
                 quote={quote}
                 onConvert={() => {}}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onDownload={handleDownload}
               />
             ))}
           </div>
