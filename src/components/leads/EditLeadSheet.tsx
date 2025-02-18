@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { Trash } from "lucide-react";
 
 interface EditLeadSheetProps {
   lead: {
@@ -32,6 +33,7 @@ interface EditLeadSheetProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (id: string, data: any) => void;
+  onDelete: (id: string) => void;
 }
 
 export function EditLeadSheet({
@@ -39,6 +41,7 @@ export function EditLeadSheet({
   isOpen,
   onOpenChange,
   onSubmit,
+  onDelete,
 }: EditLeadSheetProps) {
   const [formData, setFormData] = useState({
     name: "",
@@ -68,6 +71,13 @@ export function EditLeadSheet({
       ...formData,
       estimated_value: parseFloat(formData.estimated_value),
     });
+  };
+
+  const handleDelete = () => {
+    if (window.confirm("Sei sicuro di voler eliminare questo lead?")) {
+      onDelete(lead.id);
+      onOpenChange(false);
+    }
   };
 
   return (
@@ -171,13 +181,22 @@ export function EditLeadSheet({
           </div>
 
           <div className="flex gap-2 pt-4">
-            <Button type="submit">Salva</Button>
+            <Button type="submit" className="flex-1">Salva</Button>
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
+              className="flex-1"
             >
               Annulla
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleDelete}
+              className="px-3"
+            >
+              <Trash className="h-4 w-4" />
             </Button>
           </div>
         </form>
