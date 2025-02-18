@@ -1,5 +1,5 @@
 
-import { Folder, Home, Users, FileText, List, LogOut } from "lucide-react";
+import { Calendar, Folder, Home, Users, FileText, List, LogOut } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -39,6 +39,11 @@ const menuItems = [
     title: "Lead",
     path: "/leads",
     icon: List,
+  },
+  {
+    title: "Calendario",
+    path: "/calendar",
+    icon: Calendar,
   },
 ];
 
