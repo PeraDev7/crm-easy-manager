@@ -44,7 +44,6 @@ const ProjectDetails = () => {
   const [taskTitle, setTaskTitle] = useState("");
   const [fileDescription, setFileDescription] = useState("");
 
-  // Query per ottenere i dettagli del progetto
   const { data: project, isLoading: isLoadingProject } = useQuery({
     queryKey: ["project", id],
     queryFn: async () => {
@@ -58,7 +57,6 @@ const ProjectDetails = () => {
     },
   });
 
-  // Query per ottenere i task del progetto
   const { data: tasks, isLoading: isLoadingTasks } = useQuery({
     queryKey: ["tasks", id],
     queryFn: async () => {
@@ -72,7 +70,6 @@ const ProjectDetails = () => {
     },
   });
 
-  // Query per ottenere gli allegati del progetto
   const { data: attachments, isLoading: isLoadingAttachments } = useQuery<Attachment[]>({
     queryKey: ["attachments", id],
     queryFn: async () => {
@@ -86,7 +83,6 @@ const ProjectDetails = () => {
     },
   });
 
-  // Mutation per aggiungere un task
   const addTaskMutation = useMutation({
     mutationFn: async (title: string) => {
       const { error } = await supabase.from("tasks").insert({
@@ -114,7 +110,6 @@ const ProjectDetails = () => {
     },
   });
 
-  // Mutation per aggiornare lo stato di un task
   const updateTaskStatusMutation = useMutation({
     mutationFn: async ({ taskId, status }: { taskId: string; status: string }) => {
       const { error } = await supabase
@@ -139,7 +134,6 @@ const ProjectDetails = () => {
     },
   });
 
-  // Mutation per eliminare un task
   const deleteTaskMutation = useMutation({
     mutationFn: async (taskId: string) => {
       const { error } = await supabase.from("tasks").delete().eq("id", taskId);
@@ -161,7 +155,37 @@ const ProjectDetails = () => {
     },
   });
 
-  // Mutation per caricare un file
+  const deleteFileMutation = useMutation({
+    mutationFn: async (attachment: Attachment) => {
+      const { error: storageError } = await supabase.storage
+        .from("attachments")
+        .remove([attachment.file_path]);
+      
+      if (storageError) throw storageError;
+
+      const { error: dbError } = await supabase
+        .from("attachments")
+        .delete()
+        .eq("id", attachment.id);
+
+      if (dbError) throw dbError;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["attachments", id] });
+      toast({
+        title: "File eliminato",
+        description: "Il file è stato eliminato con successo",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Errore",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const uploadFileMutation = useMutation({
     mutationFn: async ({ file, description }: { file: File; description: string }) => {
       const fileExt = file.name.split(".").pop();
@@ -202,7 +226,6 @@ const ProjectDetails = () => {
     },
   });
 
-  // Mutation per salvare le note
   const saveNotesMutation = useMutation({
     mutationFn: async (notes: string) => {
       const { error } = await supabase
@@ -226,6 +249,19 @@ const ProjectDetails = () => {
       });
     },
   });
+
+  const getTaskStatusColor = (status: string) => {
+    switch (status) {
+      case "completed":
+        return "bg-green-100 text-green-800";
+      case "in_progress":
+        return "bg-orange-100 text-orange-800";
+      case "todo":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -323,7 +359,7 @@ const ProjectDetails = () => {
                               })
                             }
                           >
-                            <SelectTrigger className="w-[180px]">
+                            <SelectTrigger className={cn("w-[180px]", getTaskStatusColor(task.status))}>
                               <SelectValue placeholder="Seleziona stato" />
                             </SelectTrigger>
                             <SelectContent>
@@ -393,13 +429,22 @@ const ProjectDetails = () => {
                             )}
                           </p>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => getFileUrl(attachment.file_path)}
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => getFileUrl(attachment.file_path)}
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => deleteFileMutation.mutate(attachment)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>

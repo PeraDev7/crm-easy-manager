@@ -1,6 +1,5 @@
 
 import { cn } from "@/lib/utils";
-import TextareaAutosize from "react-textarea-autosize";
 
 interface EditorProps {
   value: string;
@@ -10,13 +9,12 @@ interface EditorProps {
 
 export function Editor({ value, onChange, className }: EditorProps) {
   return (
-    <TextareaAutosize
-      autoFocus
+    <textarea
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder="Scrivi qui le tue note..."
       className={cn(
-        "w-full resize-none appearance-none overflow-hidden bg-transparent focus:outline-none p-4 text-base",
+        "w-full h-[200px] resize-none appearance-none overflow-hidden bg-transparent focus:outline-none p-4 text-base border rounded-md",
         className
       )}
     />
