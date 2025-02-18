@@ -6,6 +6,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
+import { LeadsChart } from "@/components/dashboard/LeadsChart";
+import { ProjectsChart } from "@/components/dashboard/ProjectsChart";
+import { PersonalNotes } from "@/components/dashboard/PersonalNotes";
 
 const Dashboard = () => {
   const { data: clientsCount } = useQuery({
@@ -63,6 +66,7 @@ const Dashboard = () => {
   return (
     <Layout>
       <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -110,6 +114,15 @@ const Dashboard = () => {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <LeadsChart />
+        <ProjectsChart />
+      </div>
+
+      <div className="mb-8">
+        <PersonalNotes />
       </div>
     </Layout>
   );
