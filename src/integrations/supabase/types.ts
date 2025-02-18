@@ -423,6 +423,100 @@ export type Database = {
           },
         ]
       }
+      quote_items: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          quantity: number
+          quote_id: string
+          total: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          quantity?: number
+          quote_id: string
+          total?: number
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          quantity?: number
+          quote_id?: string
+          total?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_items_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quotes: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          created_by: string
+          date: string
+          expiry_date: string | null
+          id: string
+          notes: string | null
+          quote_number: string
+          status: string | null
+          subtotal: number
+          tax_amount: number
+          tax_rate: number | null
+          total: number
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          created_by: string
+          date: string
+          expiry_date?: string | null
+          id?: string
+          notes?: string | null
+          quote_number: string
+          status?: string | null
+          subtotal?: number
+          tax_amount?: number
+          tax_rate?: number | null
+          total?: number
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          created_by?: string
+          date?: string
+          expiry_date?: string | null
+          id?: string
+          notes?: string | null
+          quote_number?: string
+          status?: string | null
+          subtotal?: number
+          tax_amount?: number
+          tax_rate?: number | null
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reminders: {
         Row: {
           created_at: string
