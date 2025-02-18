@@ -135,28 +135,35 @@ const Projects = () => {
 
   const deleteProjectMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { data: tasks } = await supabase
+      // Prima eliminiamo tutti i task associati
+      const { error: taskError } = await supabase
         .from("tasks")
-        .select("id")
+        .delete()
         .eq("project_id", id);
+      
+      if (taskError) throw taskError;
 
-      const { data: files } = await supabase
+      // Poi eliminiamo tutti i file associati
+      const { error: fileError } = await supabase
         .from("attachments")
-        .select("id")
+        .delete()
         .eq("project_id", id);
+      
+      if (fileError) throw fileError;
 
-      if ((tasks && tasks.length > 0) || (files && files.length > 0)) {
-        throw new Error("Non è possibile eliminare il progetto perché contiene task o file. Rimuovili prima di procedere.");
-      }
-
-      const { error } = await supabase.from("projects").delete().eq("id", id);
+      // Infine eliminiamo il progetto
+      const { error } = await supabase
+        .from("projects")
+        .delete()
+        .eq("id", id);
+      
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
       toast({
         title: "Progetto eliminato",
-        description: "Il progetto è stato eliminato con successo",
+        description: "Il progetto e tutti i suoi contenuti sono stati eliminati con successo",
       });
       setProjectToDelete(null);
     },
@@ -390,9 +397,9 @@ const Projects = () => {
                 Conferma eliminazione
               </AlertDialogTitle>
               <AlertDialogDescription>
-                Stai per eliminare questo progetto. Questa azione non può essere annullata.
+                Stai per eliminare questo progetto. Questa azione eliminerà anche tutti i task e i file associati.
                 <br /><br />
-                <strong>Nota:</strong> Non è possibile eliminare il progetto se contiene task o file. Rimuovili prima di procedere con l'eliminazione.
+                <strong>Attenzione:</strong> Questa azione non può essere annullata. Tutti i dati verranno persi definitivamente.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -405,7 +412,7 @@ const Projects = () => {
                   }
                 }}
               >
-                Elimina
+                Elimina tutto
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
