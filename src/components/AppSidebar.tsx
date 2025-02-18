@@ -10,8 +10,11 @@ import {
   Cog,
   List,
   UserSquare,
+  LogOut,
 } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 import {
   Sidebar,
@@ -26,10 +29,27 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  SidebarFooter,
 } from "@/components/ui/sidebar";
 
 export function AppSidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      navigate('/auth');
+    } catch (error: any) {
+      toast({
+        title: "Errore",
+        description: "Errore durante il logout",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <Sidebar>
@@ -143,6 +163,13 @@ export function AppSidebar() {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarContent>
+
+      <SidebarFooter>
+        <SidebarMenuButton onClick={handleLogout} className="mt-auto gap-2 text-muted-foreground hover:text-foreground">
+          <LogOut className="w-4 h-4" />
+          <span>Logout</span>
+        </SidebarMenuButton>
+      </SidebarFooter>
     </Sidebar>
   );
 }
