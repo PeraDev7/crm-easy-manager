@@ -10,6 +10,8 @@ import Index from "./pages/Index";
 import Clients from "./pages/Clients";
 import Projects from "./pages/Projects";
 import ProjectDetails from "./pages/ProjectDetails";
+import Quotes from "./pages/Quotes";
+import Invoices from "./pages/Invoices";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 
@@ -84,6 +86,22 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <ProjectDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/quotes"
+            element={
+              <ProtectedRoute>
+                <Quotes />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/invoices"
+            element={
+              <ProtectedRoute>
+                <Invoices />
               </ProtectedRoute>
             }
           />
