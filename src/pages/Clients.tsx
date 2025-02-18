@@ -1,5 +1,6 @@
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
+import { SearchBar } from "@/components/SearchBar";
 import {
   Card,
   CardContent,
@@ -7,7 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import {
   Sheet,
   SheetContent,
@@ -47,6 +47,7 @@ type Client = ClientFormData & {
 const Clients = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState<ClientFormData>({
     name: "",
     email: null,
@@ -66,12 +67,18 @@ const Clients = () => {
 
   // Query per ottenere i clienti
   const { data: clients, isLoading } = useQuery({
-    queryKey: ["clients"],
+    queryKey: ["clients", searchTerm],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("clients")
         .select("*")
         .order("name");
+
+      if (searchTerm) {
+        query = query.or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,business_name.ilike.%${searchTerm}%`);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data as Client[];
     },
@@ -200,6 +207,15 @@ const Clients = () => {
           <UserPlus className="h-4 w-4" />
           Nuovo Cliente
         </Button>
+      </div>
+
+      <div className="mb-6">
+        <SearchBar
+          value={searchTerm}
+          onChange={setSearchTerm}
+          label="Cerca clienti"
+          placeholder="Cerca per nome, email o ragione sociale..."
+        />
       </div>
 
       {isLoading ? (
