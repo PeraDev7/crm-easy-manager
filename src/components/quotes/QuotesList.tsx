@@ -1,4 +1,3 @@
-
 import { formatDistanceToNow } from "date-fns";
 import { it } from "date-fns/locale";
 import { FileText, Download, Edit, Trash2 } from "lucide-react";
@@ -24,6 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useState } from "react";
 import { EditQuoteSheet } from "./EditQuoteSheet";
+import { ViewQuoteSheet } from "./ViewQuoteSheet";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -56,6 +56,7 @@ export function QuotesList({ quotes }: QuotesListProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [quoteToDelete, setQuoteToDelete] = useState<string | null>(null);
   const [editQuoteId, setEditQuoteId] = useState<string | null>(null);
+  const [viewQuoteId, setViewQuoteId] = useState<string | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -139,7 +140,11 @@ export function QuotesList({ quotes }: QuotesListProps) {
                   >
                     <Download className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon">
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    onClick={() => setViewQuoteId(quote.id)}
+                  >
                     <FileText className="h-4 w-4" />
                   </Button>
                   <Button
@@ -198,6 +203,14 @@ export function QuotesList({ quotes }: QuotesListProps) {
         open={!!editQuoteId}
         onOpenChange={(open) => {
           if (!open) setEditQuoteId(null);
+        }}
+      />
+
+      <ViewQuoteSheet
+        quoteId={viewQuoteId}
+        open={!!viewQuoteId}
+        onOpenChange={(open) => {
+          if (!open) setViewQuoteId(null);
         }}
       />
     </>
