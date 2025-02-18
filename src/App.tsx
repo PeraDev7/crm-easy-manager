@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
 import Clients from "./pages/Clients";
 import Projects from "./pages/Projects";
+import ProjectDetails from "./pages/ProjectDetails";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 
@@ -75,6 +76,14 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <Projects />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/projects/:id"
+            element={
+              <ProtectedRoute>
+                <ProjectDetails />
               </ProtectedRoute>
             }
           />
