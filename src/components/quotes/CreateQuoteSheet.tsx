@@ -47,7 +47,7 @@ const formSchema = z.object({
   client_id: z.string().min(1, "Il cliente è obbligatorio"),
   quote_number: z.string().min(1, "Il numero preventivo è obbligatorio"),
   date: z.string().min(1, "La data è obbligatoria"),
-  expiry_date: z.string().optional(),
+  expiry_date: z.string().optional().nullable(),
   notes: z.string().optional(),
 });
 
@@ -59,6 +59,7 @@ export function CreateQuoteSheet({ open, onOpenChange }: CreateQuoteSheetProps) 
   ]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [totals, setTotals] = useState({ subtotal: 0, taxAmount: 0, total: 0 });
   
   const form = useForm<QuoteFormValues>({
     resolver: zodResolver(formSchema),
@@ -103,12 +104,15 @@ export function CreateQuoteSheet({ open, onOpenChange }: CreateQuoteSheetProps) 
     return { subtotal, taxAmount, total };
   };
 
+  // Aggiorniamo i totali quando cambiano gli items
+  React.useEffect(() => {
+    setTotals(calculateTotals(items));
+  }, [items]);
+
   const onSubmit = async (values: QuoteFormValues) => {
     try {
       const user = (await supabase.auth.getUser()).data.user;
       if (!user) throw new Error("User not found");
-
-      const { subtotal, taxAmount, total } = calculateTotals(items);
 
       // Validate items
       if (!items.every(item => item.description.trim())) {
@@ -123,17 +127,19 @@ export function CreateQuoteSheet({ open, onOpenChange }: CreateQuoteSheetProps) 
       // Create quote
       const { data: quote, error: quoteError } = await supabase
         .from("quotes")
-        .insert([
-          {
-            ...values,
-            created_by: user.id,
-            subtotal,
-            tax_rate: 22,
-            tax_amount: taxAmount,
-            total,
-            status: "draft",
-          },
-        ])
+        .insert({
+          client_id: values.client_id,
+          quote_number: values.quote_number,
+          date: values.date,
+          expiry_date: values.expiry_date || null,
+          notes: values.notes,
+          created_by: user.id,
+          subtotal: totals.subtotal,
+          tax_rate: 22,
+          tax_amount: totals.taxAmount,
+          total: totals.total,
+          status: "draft",
+        })
         .select()
         .single();
 
@@ -242,7 +248,7 @@ export function CreateQuoteSheet({ open, onOpenChange }: CreateQuoteSheetProps) 
                 name="expiry_date"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Data Scadenza</FormLabel>
+                    <FormLabel>Data Scadenza (opzionale)</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
@@ -315,6 +321,21 @@ export function CreateQuoteSheet({ open, onOpenChange }: CreateQuoteSheetProps) 
                   </div>
                 </div>
               ))}
+
+              <div className="mt-4 space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span>Subtotale:</span>
+                  <span>€ {totals.subtotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>IVA (22%):</span>
+                  <span>€ {totals.taxAmount.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between font-medium">
+                  <span>Totale:</span>
+                  <span>€ {totals.total.toFixed(2)}</span>
+                </div>
+              </div>
             </div>
 
             <FormField
