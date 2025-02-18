@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -20,6 +19,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Editor } from "@/components/ui/editor";
+
+interface Attachment {
+  id: string;
+  name: string;
+  description: string | null;
+  file_path: string;
+  file_type: string | null;
+  file_size: number | null;
+  created_at: string;
+  created_by: string;
+  project_id: string | null;
+  task_id: string | null;
+}
 
 const ProjectDetails = () => {
   useRequireAuth();
@@ -61,7 +73,7 @@ const ProjectDetails = () => {
   });
 
   // Query per ottenere gli allegati del progetto
-  const { data: attachments, isLoading: isLoadingAttachments } = useQuery({
+  const { data: attachments, isLoading: isLoadingAttachments } = useQuery<Attachment[]>({
     queryKey: ["attachments", id],
     queryFn: async () => {
       const { data, error } = await supabase
