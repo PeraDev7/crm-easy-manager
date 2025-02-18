@@ -66,7 +66,8 @@ const ProjectDetails = () => {
         .from("tasks")
         .select("*")
         .eq("project_id", id)
-        .order("created_at", { ascending: false });
+        .order('position', { ascending: true })
+        .order('created_at', { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -87,11 +88,15 @@ const ProjectDetails = () => {
 
   const addTaskMutation = useMutation({
     mutationFn: async (title: string) => {
+      const maxPosition = tasks?.reduce((max, task) => 
+        Math.max(max, task.position || 0), -1) ?? -1;
+      
       const { error } = await supabase.from("tasks").insert({
         title,
         project_id: id,
         created_by: (await supabase.auth.getUser()).data.user?.id,
         status: "todo",
+        position: maxPosition + 1,
       });
       if (error) throw error;
     },
@@ -295,25 +300,17 @@ const ProjectDetails = () => {
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
 
-    // Optimistic update
-    queryClient.setQueryData(["tasks", id], items);
+    queryClient.setQueryData(["tasks", id], items.map((item, index) => ({
+      ...item,
+      position: index
+    })));
 
-    // Update task order in database
-    const updates = items.map((task, index) => ({
-      id: task.id,
-      status: task.status, // Manteniamo lo stato esistente
-      title: task.title,   // Manteniamo il titolo esistente
-      // Altri campi esistenti che vogliamo mantenere
-      project_id: id,
-    }));
-
-    // Aggiorna i task in sequenza
     Promise.all(
-      updates.map((update, index) =>
+      items.map((task, index) =>
         supabase
           .from("tasks")
-          .update(update)
-          .eq("id", update.id)
+          .update({ position: index })
+          .eq("id", task.id)
       )
     ).catch((error) => {
       toast({
@@ -321,7 +318,6 @@ const ProjectDetails = () => {
         description: "Errore durante l'aggiornamento dell'ordine dei task",
         variant: "destructive",
       });
-      // Revert optimistic update
       queryClient.invalidateQueries({ queryKey: ["tasks", id] });
     });
   };
