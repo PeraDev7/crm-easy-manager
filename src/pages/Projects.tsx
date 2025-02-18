@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,6 +32,7 @@ import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
 
 type ProjectFormData = {
   name: string;
@@ -52,6 +52,9 @@ type Project = ProjectFormData & {
 };
 
 const Projects = () => {
+  // Utilizziamo il nuovo hook per proteggere la rotta
+  useRequireAuth();
+
   const [isOpen, setIsOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [formData, setFormData] = useState<ProjectFormData>({
