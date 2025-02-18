@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -33,7 +34,7 @@ const Projects = () => {
   const [description, setDescription] = useState("");
   const [clientId, setClientId] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedClientFilter, setSelectedClientFilter] = useState("");
+  const [selectedClientFilter, setSelectedClientFilter] = useState("all");
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -166,7 +167,7 @@ const Projects = () => {
 
   const filteredProjects = projects?.filter((project) => {
     const matchesSearch = project.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesClient = !selectedClientFilter || project.client_id === selectedClientFilter;
+    const matchesClient = selectedClientFilter === "all" || project.client_id === selectedClientFilter;
     return matchesSearch && matchesClient;
   });
 
@@ -202,7 +203,7 @@ const Projects = () => {
                 <SelectValue placeholder="Tutti i clienti" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tutti i clienti</SelectItem>
+                <SelectItem value="all">Tutti i clienti</SelectItem>
                 {clients?.map((client) => (
                   <SelectItem key={client.id} value={client.id}>
                     {client.name}
