@@ -1,46 +1,26 @@
-import { formatDistanceToNow } from "date-fns";
-import { it } from "date-fns/locale";
-import { FileText, Download, Edit, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { useState } from "react";
 import { EditQuoteSheet } from "./EditQuoteSheet";
 import { ViewQuoteSheet } from "./ViewQuoteSheet";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-const statusMap = {
-  draft: { label: "Bozza", variant: "secondary" },
-  sent: { label: "Inviato", variant: "default" },
-  accepted: { label: "Accettato", variant: "default" },
-  rejected: { label: "Rifiutato", variant: "destructive" },
-} as const;
+import { QuoteTableRow } from "./QuoteTableRow";
+import { DeleteQuoteDialog } from "./DeleteQuoteDialog";
 
 type Quote = {
   id: string;
   quote_number: string;
   date: string;
   total: number;
-  status: keyof typeof statusMap;
+  status: "draft" | "sent" | "accepted" | "rejected";
   client: {
     id: string;
     name: string;
@@ -115,88 +95,37 @@ export function QuotesList({ quotes }: QuotesListProps) {
           </TableHeader>
           <TableBody>
             {quotes.map((quote) => (
-              <TableRow key={quote.id}>
-                <TableCell>{quote.quote_number}</TableCell>
-                <TableCell>
-                  {quote.client?.business_name || quote.client?.name || "N/D"}
-                </TableCell>
-                <TableCell>
-                  {formatDistanceToNow(new Date(quote.date), {
-                    addSuffix: true,
-                    locale: it,
-                  })}
-                </TableCell>
-                <TableCell>€ {quote.total.toFixed(2)}</TableCell>
-                <TableCell>
-                  <Badge variant={statusMap[quote.status].variant}>
-                    {statusMap[quote.status].label}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right space-x-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDownload(quote.id)}
-                  >
-                    <Download className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={() => setViewQuoteId(quote.id)}
-                  >
-                    <FileText className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setEditQuoteId(quote.id)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => {
-                      setQuoteToDelete(quote.id);
-                      setDeleteDialogOpen(true);
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
+              <QuoteTableRow
+                key={quote.id}
+                quote={quote}
+                onView={(id) => setViewQuoteId(id)}
+                onEdit={(id) => setEditQuoteId(id)}
+                onDelete={(id) => {
+                  setQuoteToDelete(id);
+                  setDeleteDialogOpen(true);
+                }}
+                onDownload={handleDownload}
+              />
             ))}
           </TableBody>
         </Table>
       </div>
 
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Sei sicuro?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Questa azione non può essere annullata. Il preventivo verrà eliminato permanentemente.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setQuoteToDelete(null)}>
-              Annulla
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (quoteToDelete) {
-                  handleDelete(quoteToDelete);
-                  setQuoteToDelete(null);
-                }
-                setDeleteDialogOpen(false);
-              }}
-            >
-              Elimina
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteQuoteDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={() => {
+          if (quoteToDelete) {
+            handleDelete(quoteToDelete);
+            setQuoteToDelete(null);
+          }
+          setDeleteDialogOpen(false);
+        }}
+        onCancel={() => {
+          setQuoteToDelete(null);
+          setDeleteDialogOpen(false);
+        }}
+      />
 
       <EditQuoteSheet
         quoteId={editQuoteId}
