@@ -9,10 +9,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface CreateEventSheetProps {
   isOpen: boolean;
@@ -27,16 +34,44 @@ export function CreateEventSheet({
   leadId,
   defaultDate,
 }: CreateEventSheetProps) {
+  const startDate = defaultDate || new Date();
+  const endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // +1 ora
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     location: "",
-    startTime: defaultDate ? new Date(defaultDate).toISOString().slice(0, 16) : "",
-    endTime: defaultDate ? new Date(defaultDate.getTime() + 3600000).toISOString().slice(0, 16) : "",
+    startTime: startDate.toISOString().slice(0, 16),
+    endTime: endDate.toISOString().slice(0, 16),
+    selectedLeadId: leadId || "",
   });
+
+  useEffect(() => {
+    if (defaultDate) {
+      const newEndDate = new Date(defaultDate.getTime() + 60 * 60 * 1000);
+      setFormData(prev => ({
+        ...prev,
+        startTime: defaultDate.toISOString().slice(0, 16),
+        endTime: newEndDate.toISOString().slice(0, 16),
+      }));
+    }
+  }, [defaultDate]);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  const { data: leads } = useQuery({
+    queryKey: ["leads"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("leads")
+        .select("id, name")
+        .order("name", { ascending: true });
+
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const createEventMutation = useMutation({
     mutationFn: async (values: typeof formData) => {
@@ -49,7 +84,7 @@ export function CreateEventSheet({
           location: values.location,
           start_time: values.startTime,
           end_time: values.endTime,
-          lead_id: leadId,
+          lead_id: values.selectedLeadId || null,
           created_by: userData.user?.id,
         })
         .select()
@@ -65,8 +100,9 @@ export function CreateEventSheet({
         title: "",
         description: "",
         location: "",
-        startTime: "",
-        endTime: "",
+        startTime: startDate.toISOString().slice(0, 16),
+        endTime: endDate.toISOString().slice(0, 16),
+        selectedLeadId: leadId || "",
       });
       toast({
         title: "Evento creato",
@@ -127,6 +163,27 @@ export function CreateEventSheet({
                 setFormData({ ...formData, location: e.target.value })
               }
             />
+          </div>
+
+          <div>
+            <Label htmlFor="lead">Lead associato</Label>
+            <Select
+              value={formData.selectedLeadId}
+              onValueChange={(value) =>
+                setFormData({ ...formData, selectedLeadId: value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Seleziona un lead" />
+              </SelectTrigger>
+              <SelectContent>
+                {leads?.map((lead) => (
+                  <SelectItem key={lead.id} value={lead.id}>
+                    {lead.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>

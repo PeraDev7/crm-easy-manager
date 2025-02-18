@@ -8,6 +8,7 @@ import interactionPlugin from "@fullcalendar/interaction";
 import itLocale from "@fullcalendar/core/locales/it";
 import { useState } from "react";
 import { CreateEventSheet } from "./CreateEventSheet";
+import { ViewEventSheet } from "./ViewEventSheet";
 
 interface LeadCalendarProps {
   leadId?: string;
@@ -15,14 +16,16 @@ interface LeadCalendarProps {
 
 export function LeadCalendar({ leadId }: LeadCalendarProps) {
   const [isCreateEventOpen, setIsCreateEventOpen] = useState(false);
+  const [isViewEventOpen, setIsViewEventOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
 
   const { data: events } = useQuery({
     queryKey: ["events", leadId],
     queryFn: async () => {
       const query = supabase
         .from("events")
-        .select("*")
+        .select("*, leads(name)")
         .order("start_time", { ascending: true });
 
       if (leadId) {
@@ -37,10 +40,13 @@ export function LeadCalendar({ leadId }: LeadCalendarProps) {
         title: event.title,
         start: event.start_time,
         end: event.end_time,
+        backgroundColor: event.color || "#9b87f5",
+        borderColor: event.color || "#9b87f5",
         extendedProps: {
           description: event.description,
           location: event.location,
           leadId: event.lead_id,
+          leadName: event.leads?.name,
         },
       }));
     },
@@ -51,8 +57,13 @@ export function LeadCalendar({ leadId }: LeadCalendarProps) {
     setIsCreateEventOpen(true);
   };
 
+  const handleEventClick = (arg: { event: any }) => {
+    setSelectedEvent(arg.event);
+    setIsViewEventOpen(true);
+  };
+
   return (
-    <div className="bg-background rounded-lg p-4">
+    <div className="bg-background rounded-lg p-4 shadow-sm border">
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         initialView="timeGridWeek"
@@ -64,11 +75,22 @@ export function LeadCalendar({ leadId }: LeadCalendarProps) {
         locale={itLocale}
         events={events}
         dateClick={handleDateClick}
+        eventClick={handleEventClick}
         height="auto"
         editable={true}
         selectable={true}
         selectMirror={true}
         dayMaxEvents={true}
+        slotMinTime="07:00:00"
+        slotMaxTime="21:00:00"
+        weekends={true}
+        businessHours={{
+          daysOfWeek: [1, 2, 3, 4, 5],
+          startTime: '09:00',
+          endTime: '18:00',
+        }}
+        slotDuration="00:30:00"
+        allDaySlot={false}
       />
 
       <CreateEventSheet
@@ -76,6 +98,12 @@ export function LeadCalendar({ leadId }: LeadCalendarProps) {
         onOpenChange={setIsCreateEventOpen}
         leadId={leadId}
         defaultDate={selectedDate || undefined}
+      />
+
+      <ViewEventSheet
+        isOpen={isViewEventOpen}
+        onOpenChange={setIsViewEventOpen}
+        event={selectedEvent}
       />
     </div>
   );
