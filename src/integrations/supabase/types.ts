@@ -117,6 +117,103 @@ export type Database = {
         }
         Relationships: []
       }
+      invoice_items: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          invoice_id: string | null
+          quantity: number
+          total_price: number
+          unit_price: number
+          vat_rate: number | null
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          invoice_id?: string | null
+          quantity?: number
+          total_price?: number
+          unit_price?: number
+          vat_rate?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          invoice_id?: string | null
+          quantity?: number
+          total_price?: number
+          unit_price?: number
+          vat_rate?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          created_at: string
+          created_by: string
+          date: string
+          due_date: string | null
+          id: string
+          notes: string | null
+          number: string
+          payment_details: Json | null
+          payment_method: string | null
+          payment_status: string | null
+          project_id: string | null
+          status: string | null
+          total_amount: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          date?: string
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          number: string
+          payment_details?: Json | null
+          payment_method?: string | null
+          payment_status?: string | null
+          project_id?: string | null
+          status?: string | null
+          total_amount?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          date?: string
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          number?: string
+          payment_details?: Json | null
+          payment_method?: string | null
+          payment_status?: string | null
+          project_id?: string | null
+          status?: string | null
+          total_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -192,6 +289,107 @@ export type Database = {
           {
             foreignKeyName: "projects_parent_id_fkey"
             columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quote_items: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          quantity: number
+          quote_id: string | null
+          total_price: number
+          unit_price: number
+          vat_rate: number | null
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          quantity?: number
+          quote_id?: string | null
+          total_price?: number
+          unit_price?: number
+          vat_rate?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          quantity?: number
+          quote_id?: string | null
+          total_price?: number
+          unit_price?: number
+          vat_rate?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_items_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quotes: {
+        Row: {
+          converted_to_invoice: string | null
+          created_at: string
+          created_by: string
+          date: string
+          id: string
+          notes: string | null
+          number: string
+          project_id: string | null
+          status: string | null
+          template_id: string | null
+          total_amount: number
+          valid_until: string | null
+        }
+        Insert: {
+          converted_to_invoice?: string | null
+          created_at?: string
+          created_by: string
+          date?: string
+          id?: string
+          notes?: string | null
+          number: string
+          project_id?: string | null
+          status?: string | null
+          template_id?: string | null
+          total_amount?: number
+          valid_until?: string | null
+        }
+        Update: {
+          converted_to_invoice?: string | null
+          created_at?: string
+          created_by?: string
+          date?: string
+          id?: string
+          notes?: string | null
+          number?: string
+          project_id?: string | null
+          status?: string | null
+          template_id?: string | null
+          total_amount?: number
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotes_converted_to_invoice_fkey"
+            columns: ["converted_to_invoice"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_project_id_fkey"
+            columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
