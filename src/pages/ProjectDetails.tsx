@@ -295,21 +295,33 @@ const ProjectDetails = () => {
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
 
+    // Optimistic update
     queryClient.setQueryData(["tasks", id], items);
 
-    const updatePromises = items.map((task, index) => {
-      return supabase
-        .from("tasks")
-        .update({ position: index })
-        .eq("id", task.id);
-    });
+    // Update task order in database
+    const updates = items.map((task, index) => ({
+      id: task.id,
+      status: task.status, // Manteniamo lo stato esistente
+      title: task.title,   // Manteniamo il titolo esistente
+      // Altri campi esistenti che vogliamo mantenere
+      project_id: id,
+    }));
 
-    Promise.all(updatePromises).catch((error) => {
+    // Aggiorna i task in sequenza
+    Promise.all(
+      updates.map((update, index) =>
+        supabase
+          .from("tasks")
+          .update(update)
+          .eq("id", update.id)
+      )
+    ).catch((error) => {
       toast({
         title: "Errore",
         description: "Errore durante l'aggiornamento dell'ordine dei task",
         variant: "destructive",
       });
+      // Revert optimistic update
       queryClient.invalidateQueries({ queryKey: ["tasks", id] });
     });
   };
