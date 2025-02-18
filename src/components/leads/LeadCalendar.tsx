@@ -9,6 +9,7 @@ import itLocale from "@fullcalendar/core/locales/it";
 import { useState } from "react";
 import { CreateEventSheet } from "./CreateEventSheet";
 import { ViewEventSheet } from "./ViewEventSheet";
+import { cn } from "@/lib/utils";
 
 interface LeadCalendarProps {
   leadId?: string;
@@ -40,8 +41,10 @@ export function LeadCalendar({ leadId }: LeadCalendarProps) {
         title: event.title,
         start: event.start_time,
         end: event.end_time,
-        backgroundColor: event.color || "#9b87f5",
-        borderColor: event.color || "#9b87f5",
+        backgroundColor: "#F4F4F5",
+        textColor: "#18181B",
+        borderColor: "#E4E4E7",
+        className: "rounded-md shadow-sm border-0 p-1",
         extendedProps: {
           description: event.description,
           location: event.location,
@@ -64,6 +67,78 @@ export function LeadCalendar({ leadId }: LeadCalendarProps) {
 
   return (
     <div className="bg-background rounded-lg p-4 shadow-sm border">
+      <style>
+        {`
+          .fc {
+            --fc-border-color: #E4E4E7;
+            --fc-today-bg-color: #F4F4F5;
+            --fc-neutral-bg-color: #FFFFFF;
+            --fc-list-event-hover-bg-color: #F4F4F5;
+            --fc-theme-standard-border-color: #E4E4E7;
+            height: 800px !important;
+          }
+          .fc-theme-standard .fc-scrollgrid {
+            border: 1px solid #E4E4E7;
+            border-radius: 0.5rem;
+          }
+          .fc .fc-toolbar {
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+          }
+          .fc .fc-toolbar-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+          }
+          .fc .fc-button {
+            background: white;
+            border: 1px solid #E4E4E7;
+            color: #18181B;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+          }
+          .fc .fc-button:hover {
+            background: #F4F4F5;
+          }
+          .fc .fc-button-primary:not(:disabled).fc-button-active,
+          .fc .fc-button-primary:not(:disabled):active {
+            background: #F4F4F5;
+            border-color: #E4E4E7;
+            color: #18181B;
+          }
+          .fc-direction-ltr .fc-button-group > .fc-button:not(:last-child) {
+            border-radius: 0.375rem;
+            margin-right: 0.25rem;
+          }
+          .fc-direction-ltr .fc-button-group > .fc-button:not(:first-child) {
+            border-radius: 0.375rem;
+            margin-left: 0.25rem;
+          }
+          .fc-theme-standard td, .fc-theme-standard th {
+            border: 1px solid #E4E4E7;
+          }
+          .fc-timegrid-slot {
+            height: 3rem !important;
+          }
+          .fc-day-today {
+            background: #F9FAFB !important;
+          }
+          .fc-event {
+            border-radius: 0.375rem;
+            padding: 0.25rem;
+            font-size: 0.875rem;
+          }
+          .fc-event:hover {
+            background: #F4F4F5;
+          }
+          .fc-toolbar-chunk {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+          }
+        `}
+      </style>
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         initialView="timeGridWeek"
