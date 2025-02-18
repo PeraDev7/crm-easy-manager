@@ -15,6 +15,14 @@ interface LeadCalendarProps {
   leadId?: string;
 }
 
+const eventColors = [
+  { bg: "#E5DEFF", text: "#6E59A5", border: "#9b87f5" }, // Purple
+  { bg: "#FDE1D3", text: "#C2410C", border: "#F97316" }, // Orange
+  { bg: "#D3E4FD", text: "#0369A1", border: "#0EA5E9" }, // Blue
+  { bg: "#F2FCE2", text: "#3F6212", border: "#84CC16" }, // Green
+  { bg: "#FEF7CD", text: "#854D0E", border: "#EAB308" }, // Yellow
+];
+
 export function LeadCalendar({ leadId }: LeadCalendarProps) {
   const [isCreateEventOpen, setIsCreateEventOpen] = useState(false);
   const [isViewEventOpen, setIsViewEventOpen] = useState(false);
@@ -36,22 +44,27 @@ export function LeadCalendar({ leadId }: LeadCalendarProps) {
       const { data, error } = await query;
       if (error) throw error;
 
-      return data.map((event) => ({
-        id: event.id,
-        title: event.title,
-        start: event.start_time,
-        end: event.end_time,
-        backgroundColor: "#F4F4F5",
-        textColor: "#18181B",
-        borderColor: "#E4E4E7",
-        className: "rounded-md shadow-sm border-0 p-1",
-        extendedProps: {
-          description: event.description,
-          location: event.location,
-          leadId: event.lead_id,
-          leadName: event.leads?.name,
-        },
-      }));
+      return data.map((event, index) => {
+        const colorIndex = index % eventColors.length;
+        const color = eventColors[colorIndex];
+        
+        return {
+          id: event.id,
+          title: event.title,
+          start: event.start_time,
+          end: event.end_time,
+          backgroundColor: color.bg,
+          textColor: color.text,
+          borderColor: color.border,
+          className: "rounded-md shadow-sm border p-1",
+          extendedProps: {
+            description: event.description,
+            location: event.location,
+            leadId: event.lead_id,
+            leadName: event.leads?.name,
+          },
+        };
+      });
     },
   });
 
@@ -128,9 +141,11 @@ export function LeadCalendar({ leadId }: LeadCalendarProps) {
             border-radius: 0.375rem;
             padding: 0.25rem;
             font-size: 0.875rem;
+            transition: all 0.2s;
           }
           .fc-event:hover {
-            background: #F4F4F5;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
           }
           .fc-toolbar-chunk {
             display: flex;

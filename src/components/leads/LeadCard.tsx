@@ -28,7 +28,7 @@ interface LeadCardProps {
     email?: string;
     phone?: string;
     status: keyof typeof statusColors;
-    estimated_value: number;
+    estimated_value?: number;
   };
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
@@ -62,7 +62,7 @@ export function LeadCard({ lead, onEdit, onDelete, onAddNote }: LeadCardProps) {
             </p>
           )}
           <p className="text-sm font-medium">
-            Valore stimato: €{lead.estimated_value.toFixed(2)}
+            Valore stimato: €{(lead.estimated_value || 0).toFixed(2)}
           </p>
           
           <div className="flex gap-2 mt-4">
