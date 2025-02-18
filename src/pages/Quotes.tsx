@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Layout } from "@/components/Layout";
@@ -9,6 +8,9 @@ import { Plus } from "lucide-react";
 import { SearchBar } from "@/components/SearchBar";
 import { QuoteCard } from "@/components/quotes/QuoteCard";
 import { CreateQuoteSheet } from "@/components/quotes/CreateQuoteSheet";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { format } from "date-fns";
 
 const Quotes = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -102,7 +104,6 @@ const Quotes = () => {
 
   const updateQuoteMutation = useMutation({
     mutationFn: async (values: any) => {
-      // Aggiorna il preventivo
       const { error: quoteError } = await supabase
         .from("quotes")
         .update({
@@ -116,7 +117,6 @@ const Quotes = () => {
 
       if (quoteError) throw quoteError;
 
-      // Elimina i vecchi items
       const { error: deleteError } = await supabase
         .from("quote_items")
         .delete()
@@ -124,7 +124,6 @@ const Quotes = () => {
 
       if (deleteError) throw deleteError;
 
-      // Inserisce i nuovi items
       const quoteItems = values.items.map((item: any) => ({
         quote_id: values.id,
         description: item.description,
@@ -200,11 +199,9 @@ const Quotes = () => {
       return;
     }
 
-    // Trova il progetto associato se esiste
     const project = projects?.find((p) => p.id === quote.project_id);
     setSelectedProject(project || null);
     
-    // Apri il form con i dati del preventivo
     setIsOpen(true);
   };
 
@@ -236,11 +233,65 @@ const Quotes = () => {
       return;
     }
 
-    // Per ora simuliamo il download con un alert
-    alert("Download PDF: " + JSON.stringify(quote, null, 2));
+    const doc = new jsPDF();
     
-    // TODO: Implementare la generazione effettiva del PDF
-    console.log("Download quote:", id);
+    const fontSize = quote.font_size === "large" ? 14 : quote.font_size === "small" ? 10 : 12;
+    doc.setFontSize(fontSize);
+
+    if (quote.logo_url) {
+      try {
+        // In un'implementazione reale, dovresti gestire il caricamento dell'immagine
+        // doc.addImage(quote.logo_url, "JPEG", 15, 15, 50, 50);
+      } catch (error) {
+        console.error("Errore nel caricamento del logo:", error);
+      }
+    }
+
+    doc.setFontSize(fontSize + 4);
+    doc.text(`Preventivo #${quote.number}`, 15, 20);
+    doc.setFontSize(fontSize);
+
+    doc.text(`Data: ${format(new Date(quote.date), "dd/MM/yyyy")}`, 15, 30);
+
+    if (quote.projects?.clients) {
+      const client = quote.projects.clients;
+      doc.text("Cliente:", 15, 45);
+      doc.text(client.name, 15, 55);
+      if (client.address) doc.text(client.address, 15, 65);
+      if (client.vat_number) doc.text(`P.IVA: ${client.vat_number}`, 15, 75);
+      if (client.tax_code) doc.text(`C.F.: ${client.tax_code}`, 15, 85);
+    }
+
+    const tableRows = quote.quote_items.map((item: any) => [
+      item.description,
+      item.quantity,
+      `€${item.unit_price.toFixed(2)}`,
+      `${item.vat_rate}%`,
+      `€${(item.quantity * item.unit_price * (1 + item.vat_rate / 100)).toFixed(2)}`,
+    ]);
+
+    autoTable(doc, {
+      startY: quote.projects?.clients ? 100 : 40,
+      head: [["Descrizione", "Quantità", "Prezzo Unit.", "IVA", "Totale"]],
+      body: tableRows,
+      theme: "grid",
+      headStyles: { fillColor: [41, 128, 185], textColor: 255 },
+      styles: { fontSize: fontSize },
+    });
+
+    const finalY = (doc as any).lastAutoTable.finalY + 10;
+    doc.text(`Totale: €${quote.total_amount.toFixed(2)}`, 15, finalY);
+
+    if (quote.footer_text) {
+      doc.text(quote.footer_text, 15, finalY + 20);
+    }
+
+    doc.save(`preventivo_${quote.number}.pdf`);
+    
+    toast({
+      title: "PDF generato",
+      description: "Il PDF è stato generato e scaricato con successo",
+    });
   };
 
   const filteredQuotes = quotes?.filter((quote) =>
