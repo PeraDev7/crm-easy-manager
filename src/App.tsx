@@ -9,6 +9,7 @@ import Dashboard from "./pages/Index";
 import QuotesSettings from "./pages/settings/QuotesSettings";
 import CrmSettings from "./pages/settings/CrmSettings";
 import UserSettings from "./pages/settings/UserSettings";
+import Quotes from "./pages/Quotes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "./App.css";
 
@@ -34,6 +35,10 @@ const router = createBrowserRouter([
   {
     path: "/calendar",
     element: <Calendar />,
+  },
+  {
+    path: "/quotes",
+    element: <Quotes />,
   },
   {
     path: "/settings",
