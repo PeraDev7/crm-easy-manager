@@ -239,15 +239,17 @@ const Quotes = () => {
       format: "a4",
     });
 
-    const fontSize = quote.font_size === "large" ? 14 : quote.font_size === "small" ? 10 : 12;
+    const pageWidth = doc.internal.pageSize.width;
+    const margin = 20;
+    const contentWidth = pageWidth - (margin * 2);
+
+    const fontSize = quote.font_size === "large" ? 12 : quote.font_size === "small" ? 8 : 10;
     doc.setFontSize(fontSize);
+    const textColor = "#1a1a1a";
+    doc.setTextColor(textColor);
 
-    const primaryColor = "#9b87f5";
-    const secondaryColor = "#403E43";
-    const lightGray = "#F1F0FB";
-
-    doc.setFillColor(primaryColor);
-    doc.rect(0, 0, 210, 40, "F");
+    doc.setFontSize(18);
+    doc.text(`Preventivo n. ${quote.number}`, margin, 30);
 
     if (quote.logo_url) {
       try {
@@ -256,7 +258,7 @@ const Quotes = () => {
         const reader = new FileReader();
         reader.onloadend = () => {
           const base64data = reader.result as string;
-          doc.addImage(base64data, "PNG", 15, 10, 40, 20, undefined, "FAST");
+          doc.addImage(base64data, "PNG", pageWidth - 60, 20, 40, 15, undefined, "FAST");
         };
         reader.readAsDataURL(blob);
       } catch (error) {
@@ -264,66 +266,51 @@ const Quotes = () => {
       }
     }
 
-    doc.setTextColor("#FFFFFF");
-    doc.setFontSize(24);
-    doc.text("PREVENTIVO", 150, 20);
-    doc.setFontSize(14);
-    doc.text(`#${quote.number}`, 150, 30);
+    let yPos = 50;
 
-    doc.setTextColor(secondaryColor);
-    doc.setFontSize(fontSize);
-
-    const formattedDate = format(new Date(quote.date), "dd/MM/yyyy");
-    doc.setFillColor(lightGray);
-    doc.roundedRect(15, 50, 180, 10, 2, 2, "F");
-    doc.text(`Data: ${formattedDate}`, 20, 56);
-
-    let yPos = 70;
     if (quote.projects?.clients) {
       const client = quote.projects.clients;
-      doc.setFillColor(lightGray);
-      doc.roundedRect(15, yPos, 180, 40, 2, 2, "F");
-      
-      doc.setFontSize(fontSize + 2);
-      doc.text("CLIENTE", 20, yPos + 8);
+      doc.setFontSize(12);
+      doc.text("Cliente", margin, yPos);
       doc.setFontSize(fontSize);
-      
-      doc.text(client.name, 20, yPos + 18);
-      if (client.address) doc.text(client.address, 20, yPos + 28);
-      const fiscalInfo = [];
-      if (client.vat_number) fiscalInfo.push(`P.IVA: ${client.vat_number}`);
-      if (client.tax_code) fiscalInfo.push(`C.F.: ${client.tax_code}`);
-      doc.text(fiscalInfo.join(" - "), 20, yPos + 38);
-      
-      yPos += 50;
+      yPos += 8;
+      doc.text(client.name, margin, yPos);
+      if (client.address) {
+        yPos += 6;
+        doc.text(client.address, margin, yPos);
+      }
+      if (client.vat_number || client.tax_code) {
+        yPos += 6;
+        const fiscalInfo = [];
+        if (client.vat_number) fiscalInfo.push(`P.IVA: ${client.vat_number}`);
+        if (client.tax_code) fiscalInfo.push(`C.F.: ${client.tax_code}`);
+        doc.text(fiscalInfo.join(" - "), margin, yPos);
+      }
+      yPos += 15;
     }
 
-    const tableRows = quote.quote_items.map((item: any) => [
-      item.description,
-      item.quantity,
-      `€${item.unit_price.toFixed(2)}`,
-      `${item.vat_rate}%`,
-      `€${(item.quantity * item.unit_price * (1 + item.vat_rate / 100)).toFixed(2)}`,
-    ]);
+    const formattedDate = format(new Date(quote.date), "dd/MM/yyyy");
+    doc.setFontSize(fontSize);
+    doc.text(`Data: ${formattedDate}`, margin, yPos);
+    if (quote.valid_until) {
+      doc.text(`Valido fino al: ${format(new Date(quote.valid_until), "dd/MM/yyyy")}`, pageWidth - margin - 50, yPos);
+    }
+    yPos += 15;
 
     autoTable(doc, {
-      startY: yPos + 10,
-      head: [["Descrizione", "Quantità", "Prezzo Unit.", "IVA", "Totale"]],
-      body: tableRows,
-      theme: "grid",
-      headStyles: { 
-        fillColor: [155, 135, 245],
-        textColor: 255,
-        fontSize: fontSize + 2,
-        fontStyle: "bold",
-        cellPadding: 8,
-      },
-      bodyStyles: {
+      startY: yPos,
+      head: [["Descrizione", "Quantità", "Prezzo", "IVA", "Totale"]],
+      body: quote.quote_items.map((item: any) => [
+        item.description,
+        item.quantity,
+        `€${item.unit_price.toFixed(2)}`,
+        `${item.vat_rate}%`,
+        `€${(item.quantity * item.unit_price * (1 + item.vat_rate / 100)).toFixed(2)}`,
+      ]),
+      theme: "plain",
+      styles: {
         fontSize: fontSize,
-        cellPadding: 6,
-      },
-      alternateRowStyles: {
-        fillColor: [241, 240, 251],
+        cellPadding: 5,
       },
       columnStyles: {
         0: { cellWidth: 80 },
@@ -332,24 +319,30 @@ const Quotes = () => {
         3: { cellWidth: 20, halign: "center" },
         4: { cellWidth: 30, halign: "right" },
       },
+      headStyles: {
+        fillColor: [255, 255, 255],
+        textColor: 40,
+        fontStyle: "bold",
+      },
+      alternateRowStyles: {
+        fillColor: [250, 250, 250],
+      },
     });
 
     const finalY = (doc as any).lastAutoTable.finalY + 10;
-    doc.setFillColor(primaryColor);
-    doc.roundedRect(120, finalY, 75, 15, 2, 2, "F");
-    doc.setTextColor("#FFFFFF");
     doc.setFontSize(fontSize + 2);
-    doc.text(`Totale: €${quote.total_amount.toFixed(2)}`, 125, finalY + 10);
+    doc.text(`Totale: €${quote.total_amount.toFixed(2)}`, pageWidth - margin - 40, finalY);
 
     if (quote.footer_text) {
-      doc.setTextColor(secondaryColor);
       doc.setFontSize(fontSize);
-      doc.setFillColor(lightGray);
-      doc.roundedRect(15, finalY + 25, 180, 20, 2, 2, "F");
-      doc.text(quote.footer_text, 20, finalY + 35, {
-        maxWidth: 170,
+      doc.text(quote.footer_text, margin, finalY + 20, {
+        maxWidth: contentWidth,
       });
     }
+
+    const signatureY = finalY + (quote.footer_text ? 50 : 30);
+    doc.line(margin, signatureY, margin + 60, signatureY);
+    doc.text("Firma per accettazione", margin, signatureY + 5);
 
     doc.save(`preventivo_${quote.number}.pdf`);
     
