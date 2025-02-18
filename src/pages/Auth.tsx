@@ -6,12 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<{ type: 'error' | 'success' | null; message: string }>({ type: null, message: "" });
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -28,6 +31,7 @@ const Auth = () => {
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setStatusMessage({ type: null, message: "" });
 
     try {
       if (isSignUp) {
@@ -41,18 +45,22 @@ const Auth = () => {
         
         if (error) {
           if (error.message.includes("User already registered")) {
-            toast({
-              title: "Utente già registrato",
-              description: "Prova ad effettuare il login invece.",
-              variant: "destructive",
+            setStatusMessage({ 
+              type: 'error', 
+              message: "Questo indirizzo email è già registrato. Prova ad effettuare il login."
+            });
+          } else if (error.message.includes("Password should be")) {
+            setStatusMessage({ 
+              type: 'error', 
+              message: "La password deve essere di almeno 6 caratteri."
             });
           } else {
-            throw error;
+            setStatusMessage({ type: 'error', message: error.message });
           }
         } else {
-          toast({
-            title: "Registrazione completata!",
-            description: "Controlla la tua email per verificare l'account.",
+          setStatusMessage({ 
+            type: 'success', 
+            message: "Registrazione completata! Controlla la tua email per verificare l'account."
           });
         }
       } else {
@@ -63,19 +71,17 @@ const Auth = () => {
         
         if (error) {
           if (error.message.includes("Invalid login credentials")) {
-            toast({
-              title: "Credenziali non valide",
-              description: "Email o password non corrette. Se non hai un account, registrati.",
-              variant: "destructive",
+            setStatusMessage({ 
+              type: 'error', 
+              message: "Email o password non corrette. Riprova o registrati se non hai un account."
             });
           } else if (error.message.includes("Email not confirmed")) {
-            toast({
-              title: "Email non verificata",
-              description: "Per favore verifica la tua email prima di accedere.",
-              variant: "destructive",
+            setStatusMessage({ 
+              type: 'error', 
+              message: "Email non verificata. Per favore verifica la tua email prima di accedere."
             });
           } else {
-            throw error;
+            setStatusMessage({ type: 'error', message: error.message });
           }
         } else {
           navigate("/");
@@ -83,11 +89,7 @@ const Auth = () => {
       }
     } catch (error: any) {
       console.error("Auth error:", error);
-      toast({
-        title: "Errore",
-        description: error.message,
-        variant: "destructive",
-      });
+      setStatusMessage({ type: 'error', message: error.message });
     } finally {
       setLoading(false);
     }
@@ -106,6 +108,15 @@ const Auth = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleAuth} className="space-y-4">
+            {statusMessage.type && (
+              <Alert variant={statusMessage.type === 'error' ? "destructive" : "default"}>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  {statusMessage.message}
+                </AlertDescription>
+              </Alert>
+            )}
+            
             <div>
               <Input
                 type="email"
@@ -136,7 +147,10 @@ const Auth = () => {
           <div className="mt-4 text-center">
             <button
               type="button"
-              onClick={() => setIsSignUp(!isSignUp)}
+              onClick={() => {
+                setIsSignUp(!isSignUp);
+                setStatusMessage({ type: null, message: "" });
+              }}
               className="text-sm text-blue-600 hover:text-blue-800"
             >
               {isSignUp
