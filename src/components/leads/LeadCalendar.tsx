@@ -171,8 +171,8 @@ export function LeadCalendar({ leadId }: LeadCalendarProps) {
         selectable={true}
         selectMirror={true}
         dayMaxEvents={true}
-        slotMinTime="07:00:00"
-        slotMaxTime="21:00:00"
+        slotMinTime="00:00:00"
+        slotMaxTime="24:00:00"
         weekends={true}
         businessHours={{
           daysOfWeek: [1, 2, 3, 4, 5],
