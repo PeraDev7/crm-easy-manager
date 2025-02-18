@@ -8,6 +8,7 @@ import {
   FileText,
   User,
   Cog,
+  List,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -65,6 +66,15 @@ export function AppSidebar() {
               <Link to="/clients">
                 <Users className="w-4 h-4" />
                 <span>Clienti</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <Link to="/quotes">
+                <List className="w-4 h-4" />
+                <span>Preventivi</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
