@@ -15,8 +15,8 @@ import { Badge } from "@/components/ui/badge";
 
 const statusMap = {
   draft: { label: "Bozza", variant: "secondary" },
-  sent: { label: "Inviato", variant: "primary" },
-  accepted: { label: "Accettato", variant: "success" },
+  sent: { label: "Inviato", variant: "default" },
+  accepted: { label: "Accettato", variant: "default" },
   rejected: { label: "Rifiutato", variant: "destructive" },
 } as const;
 
@@ -27,8 +27,9 @@ type Quote = {
   total: number;
   status: keyof typeof statusMap;
   client: {
+    id: string;
     name: string;
-    business_name: string;
+    business_name: string | null;
   } | null;
 };
 
@@ -70,7 +71,7 @@ export function QuotesList({ quotes }: QuotesListProps) {
               </TableCell>
               <TableCell>€ {quote.total.toFixed(2)}</TableCell>
               <TableCell>
-                <Badge variant={statusMap[quote.status].variant as any}>
+                <Badge variant={statusMap[quote.status].variant}>
                   {statusMap[quote.status].label}
                 </Badge>
               </TableCell>

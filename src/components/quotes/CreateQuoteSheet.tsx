@@ -1,7 +1,7 @@
 
 import { useForm } from "react-hook-form";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,15 +27,35 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface CreateQuoteSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
+type QuoteItem = {
+  description: string;
+  quantity: number;
+  unit_price: number;
+};
+
+type QuoteFormValues = {
+  client_id: string;
+  quote_number: string;
+  date: string;
+  expiry_date: string;
+  notes: string;
+};
+
 export function CreateQuoteSheet({ open, onOpenChange }: CreateQuoteSheetProps) {
-  const [items, setItems] = useState([{ description: "", quantity: 1, price: 0 }]);
-  const form = useForm({
+  const [items, setItems] = useState<QuoteItem[]>([
+    { description: "", quantity: 1, unit_price: 0 },
+  ]);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  const form = useForm<QuoteFormValues>({
     defaultValues: {
       client_id: "",
       quote_number: "",
@@ -58,16 +78,81 @@ export function CreateQuoteSheet({ open, onOpenChange }: CreateQuoteSheetProps) 
   });
 
   const handleAddItem = () => {
-    setItems([...items, { description: "", quantity: 1, price: 0 }]);
+    setItems([...items, { description: "", quantity: 1, unit_price: 0 }]);
   };
 
   const handleRemoveItem = (index: number) => {
     setItems(items.filter((_, i) => i !== index));
   };
 
-  const onSubmit = async (values: any) => {
-    // TODO: Implementare la creazione del preventivo
-    console.log(values, items);
+  const calculateTotals = (items: QuoteItem[]) => {
+    const subtotal = items.reduce(
+      (sum, item) => sum + item.quantity * item.unit_price,
+      0
+    );
+    const taxRate = 22; // TODO: Rendere configurabile
+    const taxAmount = (subtotal * taxRate) / 100;
+    const total = subtotal + taxAmount;
+
+    return { subtotal, taxAmount, total };
+  };
+
+  const onSubmit = async (values: QuoteFormValues) => {
+    try {
+      const user = (await supabase.auth.getUser()).data.user;
+      if (!user) throw new Error("User not found");
+
+      const { subtotal, taxAmount, total } = calculateTotals(items);
+
+      // Create quote
+      const { data: quote, error: quoteError } = await supabase
+        .from("quotes")
+        .insert([
+          {
+            ...values,
+            created_by: user.id,
+            subtotal,
+            tax_rate: 22,
+            tax_amount: taxAmount,
+            total,
+            status: "draft",
+          },
+        ])
+        .select()
+        .single();
+
+      if (quoteError) throw quoteError;
+
+      // Create quote items
+      const { error: itemsError } = await supabase.from("quote_items").insert(
+        items.map((item) => ({
+          quote_id: quote.id,
+          description: item.description,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          total: item.quantity * item.unit_price,
+        }))
+      );
+
+      if (itemsError) throw itemsError;
+
+      toast({
+        title: "Preventivo creato",
+        description: "Il preventivo è stato creato con successo.",
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["quotes"] });
+      onOpenChange(false);
+      form.reset();
+      setItems([{ description: "", quantity: 1, unit_price: 0 }]);
+    } catch (error: any) {
+      console.error("Error creating quote:", error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante la creazione del preventivo.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -172,6 +257,8 @@ export function CreateQuoteSheet({ open, onOpenChange }: CreateQuoteSheetProps) 
                   <div className="col-span-2">
                     <Input
                       type="number"
+                      min="1"
+                      step="1"
                       placeholder="Quantità"
                       value={item.quantity}
                       onChange={(e) => {
@@ -184,11 +271,13 @@ export function CreateQuoteSheet({ open, onOpenChange }: CreateQuoteSheetProps) 
                   <div className="col-span-3">
                     <Input
                       type="number"
+                      min="0"
+                      step="0.01"
                       placeholder="Prezzo"
-                      value={item.price}
+                      value={item.unit_price}
                       onChange={(e) => {
                         const newItems = [...items];
-                        newItems[index].price = Number(e.target.value);
+                        newItems[index].unit_price = Number(e.target.value);
                         setItems(newItems);
                       }}
                     />
@@ -199,6 +288,7 @@ export function CreateQuoteSheet({ open, onOpenChange }: CreateQuoteSheetProps) 
                       variant="ghost"
                       size="icon"
                       onClick={() => handleRemoveItem(index)}
+                      disabled={items.length === 1}
                     >
                       <Trash className="h-4 w-4" />
                     </Button>
