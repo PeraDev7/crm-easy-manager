@@ -37,7 +37,7 @@ interface LeadCardProps {
 
 export function LeadCard({ lead, onEdit, onDelete, onAddNote }: LeadCardProps) {
   return (
-    <Card className="hover:shadow-md transition-shadow duration-200">
+    <Card className="hover:shadow-md transition-shadow duration-200 w-full">
       <CardHeader className="pb-3">
         <div className="flex justify-between items-start gap-2">
           <div className="space-y-1">
@@ -60,7 +60,7 @@ export function LeadCard({ lead, onEdit, onDelete, onAddNote }: LeadCardProps) {
           {lead.email && (
             <div className="flex items-center text-sm">
               <span className="text-muted-foreground min-w-[4rem]">Email:</span>
-              <span className="font-medium">{lead.email}</span>
+              <span className="font-medium truncate">{lead.email}</span>
             </div>
           )}
           {lead.phone && (
@@ -100,7 +100,7 @@ export function LeadCard({ lead, onEdit, onDelete, onAddNote }: LeadCardProps) {
             size="sm"
             variant="outline"
             onClick={() => onDelete(lead.id)}
-            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+            className="text-destructive hover:text-destructive hover:bg-destructive/10 px-3"
           >
             <Trash className="h-4 w-4" />
           </Button>
