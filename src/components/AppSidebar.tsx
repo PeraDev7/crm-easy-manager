@@ -7,6 +7,7 @@ import {
   Settings,
   FileText,
   User,
+  Cog,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -85,6 +86,17 @@ export function AppSidebar() {
               </Link>
             </SidebarMenuButton>
             <SidebarMenuSub>
+              <SidebarMenuSubItem>
+                <SidebarMenuSubButton
+                  asChild
+                  isActive={location.pathname === "/settings"}
+                >
+                  <Link to="/settings">
+                    <Cog className="w-4 h-4" />
+                    <span>Generale</span>
+                  </Link>
+                </SidebarMenuSubButton>
+              </SidebarMenuSubItem>
               <SidebarMenuSubItem>
                 <SidebarMenuSubButton
                   asChild
