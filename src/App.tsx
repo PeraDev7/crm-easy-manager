@@ -15,7 +15,7 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-function App() {
+function AppRoutes() {
   const { initialized } = useRequireAuth();
 
   if (!initialized) {
@@ -23,19 +23,25 @@ function App() {
   }
 
   return (
+    <Routes>
+      <Route path="/auth" element={<Auth />} />
+      <Route path="/" element={<Index />} />
+      <Route path="/clients" element={<Clients />} />
+      <Route path="/projects" element={<Projects />} />
+      <Route path="/projects/:id" element={<ProjectDetails />} />
+      <Route path="/quotes" element={<Quotes />} />
+      <Route path="/leads" element={<Leads />} />
+      <Route path="/calendar" element={<Calendar />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+}
+
+function App() {
+  return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <Routes>
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/" element={<Index />} />
-          <Route path="/clients" element={<Clients />} />
-          <Route path="/projects" element={<Projects />} />
-          <Route path="/projects/:id" element={<ProjectDetails />} />
-          <Route path="/quotes" element={<Quotes />} />
-          <Route path="/leads" element={<Leads />} />
-          <Route path="/calendar" element={<Calendar />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AppRoutes />
       </BrowserRouter>
       <Toaster />
     </QueryClientProvider>

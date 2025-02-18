@@ -1,10 +1,11 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 export const useRequireAuth = () => {
   const navigate = useNavigate();
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -12,6 +13,7 @@ export const useRequireAuth = () => {
       if (!session) {
         navigate("/auth");
       }
+      setInitialized(true);
     };
 
     checkAuth();
@@ -26,4 +28,6 @@ export const useRequireAuth = () => {
       subscription.unsubscribe();
     };
   }, [navigate]);
+
+  return { initialized };
 };
