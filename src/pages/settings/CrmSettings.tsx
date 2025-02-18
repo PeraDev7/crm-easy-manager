@@ -48,9 +48,13 @@ export default function CrmSettings() {
   const { data: settings, refetch: refetchSettings } = useQuery({
     queryKey: ["crm-settings"],
     queryFn: async () => {
+      const user = (await supabase.auth.getUser()).data.user;
+      if (!user) throw new Error("User not found");
+
       const { data, error } = await supabase
         .from("crm_settings")
         .select("*")
+        .eq("created_by", user.id)
         .maybeSingle();
 
       if (error) throw error;
@@ -82,7 +86,6 @@ export default function CrmSettings() {
         primary_color: profile.primary_color,
       });
     } else if (!settings && profile) {
-      // Se non ci sono impostazioni, impostiamo i valori di default
       form.reset({
         app_name: "CRM",
         primary_color: profile.primary_color,
@@ -95,16 +98,34 @@ export default function CrmSettings() {
       const user = (await supabase.auth.getUser()).data.user;
       if (!user) throw new Error("User not found");
 
-      // Aggiorna o crea le impostazioni CRM
-      const { error: settingsError } = await supabase
+      // Prima verifichiamo se esiste già un record per questo utente
+      const { data: existingSettings } = await supabase
         .from("crm_settings")
-        .upsert({
-          app_name: data.app_name,
-          created_by: user.id,
-          ...(settings?.id ? { id: settings.id } : {}),
-        });
+        .select("id")
+        .eq("created_by", user.id)
+        .maybeSingle();
 
-      if (settingsError) throw settingsError;
+      if (existingSettings) {
+        // Aggiorniamo il record esistente
+        const { error: updateError } = await supabase
+          .from("crm_settings")
+          .update({
+            app_name: data.app_name
+          })
+          .eq("created_by", user.id);
+
+        if (updateError) throw updateError;
+      } else {
+        // Creiamo un nuovo record
+        const { error: insertError } = await supabase
+          .from("crm_settings")
+          .insert({
+            app_name: data.app_name,
+            created_by: user.id
+          });
+
+        if (insertError) throw insertError;
+      }
 
       // Aggiorna il colore primario nel profilo utente
       const { error: profileError } = await supabase
