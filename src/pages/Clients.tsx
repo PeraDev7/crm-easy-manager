@@ -1,5 +1,6 @@
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { SearchBar } from "@/components/SearchBar";
 import {
   Card,
@@ -19,7 +20,7 @@ import { Pencil, Plus, Trash2, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 // Tipo per il form del cliente
 type ClientFormData = {

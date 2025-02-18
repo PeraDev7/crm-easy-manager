@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Editor } from "@/components/ui/editor";
 import { useToast } from "@/hooks/use-toast";
