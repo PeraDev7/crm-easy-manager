@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Layout } from "@/components/Layout";
@@ -136,9 +137,7 @@ const Leads = () => {
   });
 
   const handleDelete = async (id: string) => {
-    if (window.confirm("Sei sicuro di voler eliminare questo lead?")) {
-      deleteLeadMutation.mutate(id);
-    }
+    deleteLeadMutation.mutate(id);
   };
 
   const handleEdit = (lead: any) => {
@@ -274,6 +273,7 @@ const Leads = () => {
               isOpen={isEditOpen}
               onOpenChange={setIsEditOpen}
               onSubmit={(id, data) => updateLeadMutation.mutate({ id, data })}
+              onDelete={handleDelete}
             />
             <LeadNotesSheet
               leadId={selectedLead.id}
