@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -58,6 +58,12 @@ const ProjectDetails = () => {
       return data;
     },
   });
+
+  useEffect(() => {
+    if (project?.description) {
+      setUnsavedNote(project.description);
+    }
+  }, [project?.description]);
 
   const { data: tasks, isLoading: isLoadingTasks } = useQuery({
     queryKey: ["tasks", id],
@@ -248,7 +254,7 @@ const ProjectDetails = () => {
         description: "Le note sono state salvate con successo",
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Errore",
         description: error.message,
@@ -531,10 +537,7 @@ const ProjectDetails = () => {
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Note del Progetto</CardTitle>
                 <Button 
-                  onClick={() => {
-                    saveNotesMutation.mutate(unsavedNote);
-                    setNote(unsavedNote);
-                  }}
+                  onClick={() => saveNotesMutation.mutate(unsavedNote)}
                   className="gap-2"
                 >
                   <Save className="h-4 w-4" />
@@ -543,7 +546,7 @@ const ProjectDetails = () => {
               </CardHeader>
               <CardContent>
                 <Editor
-                  value={project?.description || ""}
+                  value={unsavedNote}
                   onChange={(value) => setUnsavedNote(value)}
                 />
               </CardContent>
