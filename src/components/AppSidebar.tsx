@@ -2,10 +2,8 @@
 import {
   LayoutDashboard,
   Users,
-  FileText,
   Calendar,
   KanbanSquare,
-  Plus,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -59,24 +57,6 @@ export function AppSidebar() {
               <Link to="/clients">
                 <Users className="w-4 h-4" />
                 <span>Clienti</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Link to="/invoices">
-                <FileText className="w-4 h-4" />
-                <span>Fatture</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Link to="/quotes">
-                <FileText className="w-4 h-4" />
-                <span>Preventivi</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

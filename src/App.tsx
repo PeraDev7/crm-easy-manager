@@ -1,25 +1,19 @@
 
 import React from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import Quotes from "./pages/Quotes";
 import Clients from "./pages/Clients";
 import Projects from "./pages/Projects";
 import Leads from "./pages/Leads";
 import Calendar from "./pages/Calendar";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "./App.css";
-import Invoices from "./pages/Invoices";
 
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Quotes />,
-  },
-  {
-    path: "/quotes",
-    element: <Quotes />,
+    element: <Projects />,
   },
   {
     path: "/clients",
@@ -28,10 +22,6 @@ const router = createBrowserRouter([
   {
     path: "/projects",
     element: <Projects />,
-  },
-  {
-    path: "/invoices",
-    element: <Invoices />,
   },
   {
     path: "/leads",
