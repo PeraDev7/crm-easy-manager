@@ -9,6 +9,7 @@ import {
   User,
   Cog,
   List,
+  UserSquare,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -54,18 +55,27 @@ export function AppSidebar() {
 
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
+              <Link to="/clients">
+                <Users className="w-4 h-4" />
+                <span>Clienti</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
               <Link to="/projects">
                 <KanbanSquare className="w-4 h-4" />
                 <span>Progetti</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
-          
+
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <Link to="/clients">
-                <Users className="w-4 h-4" />
-                <span>Clienti</span>
+              <Link to="/leads">
+                <UserSquare className="w-4 h-4" />
+                <span>Leads</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
