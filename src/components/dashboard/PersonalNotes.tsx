@@ -22,11 +22,13 @@ export function PersonalNotes() {
     queryKey: ["user-notes", userId],
     enabled: !!userId,
     queryFn: async () => {
+      if (!userId) return "";
+      
       const { data, error } = await supabase
         .from("profiles")
         .select("notes")
         .eq("id", userId)
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
       if (data?.notes) {
@@ -38,6 +40,8 @@ export function PersonalNotes() {
 
   const updateNotesMutation = useMutation({
     mutationFn: async (newNotes: string) => {
+      if (!userId) return;
+      
       const { error } = await supabase
         .from("profiles")
         .update({ notes: newNotes })
