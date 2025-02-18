@@ -37,52 +37,73 @@ interface LeadCardProps {
 
 export function LeadCard({ lead, onEdit, onDelete, onAddNote }: LeadCardProps) {
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-lg font-bold">{lead.name}</CardTitle>
-        <Badge className={statusColors[lead.status]}>
-          {statusLabels[lead.status]}
-        </Badge>
+    <Card className="hover:shadow-md transition-shadow duration-200">
+      <CardHeader className="pb-3">
+        <div className="flex justify-between items-start gap-2">
+          <div className="space-y-1">
+            <CardTitle className="text-xl font-semibold leading-none">
+              {lead.name}
+            </CardTitle>
+            {lead.company && (
+              <p className="text-sm text-muted-foreground leading-none">
+                {lead.company}
+              </p>
+            )}
+          </div>
+          <Badge className={`${statusColors[lead.status]} ml-auto`}>
+            {statusLabels[lead.status]}
+          </Badge>
+        </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
         <div className="space-y-2">
-          {lead.company && (
-            <p className="text-sm text-muted-foreground">
-              Azienda: {lead.company}
-            </p>
-          )}
           {lead.email && (
-            <p className="text-sm text-muted-foreground">
-              Email: {lead.email}
-            </p>
+            <div className="flex items-center text-sm">
+              <span className="text-muted-foreground min-w-[4rem]">Email:</span>
+              <span className="font-medium">{lead.email}</span>
+            </div>
           )}
           {lead.phone && (
-            <p className="text-sm text-muted-foreground">
-              Telefono: {lead.phone}
-            </p>
+            <div className="flex items-center text-sm">
+              <span className="text-muted-foreground min-w-[4rem]">Tel:</span>
+              <span className="font-medium">{lead.phone}</span>
+            </div>
           )}
-          <p className="text-sm font-medium">
-            Valore stimato: €{(lead.estimated_value || 0).toFixed(2)}
-          </p>
-          
-          <div className="flex gap-2 mt-4">
-            <Button size="sm" variant="outline" onClick={() => onEdit(lead.id)}>
-              <Edit className="h-4 w-4 mr-1" />
-              Modifica
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => onAddNote(lead.id)}>
-              <MessageSquare className="h-4 w-4 mr-1" />
-              Note
-            </Button>
-            <Button
-              size="sm"
-              variant="destructive"
-              onClick={() => onDelete(lead.id)}
-            >
-              <Trash className="h-4 w-4 mr-1" />
-              Elimina
-            </Button>
+          <div className="flex items-center text-sm">
+            <span className="text-muted-foreground min-w-[4rem]">Valore:</span>
+            <span className="font-medium">
+              €{(lead.estimated_value || 0).toLocaleString('it-IT', { minimumFractionDigits: 2 })}
+            </span>
           </div>
+        </div>
+        
+        <div className="flex gap-2 pt-2">
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={() => onEdit(lead.id)}
+            className="flex-1"
+          >
+            <Edit className="h-4 w-4 mr-1" />
+            Modifica
+          </Button>
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={() => onAddNote(lead.id)}
+            className="flex-1"
+          >
+            <MessageSquare className="h-4 w-4 mr-1" />
+            Note
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onDelete(lead.id)}
+            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+          >
+            <Trash className="h-4 w-4" />
+          </Button>
         </div>
       </CardContent>
     </Card>
