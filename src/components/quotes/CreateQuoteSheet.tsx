@@ -179,7 +179,7 @@ export function CreateQuoteSheet({ open, onOpenChange }: CreateQuoteSheetProps) 
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full max-w-3xl overflow-y-auto">
+      <SheetContent className="w-full max-w-5xl overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Nuovo Preventivo</SheetTitle>
         </SheetHeader>
