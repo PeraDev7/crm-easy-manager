@@ -58,10 +58,10 @@ const Projects = () => {
   const [formData, setFormData] = useState<ProjectFormData>({
     name: "",
     description: null,
-    client_id: "", // Questo verrà validato prima dell'invio
+    client_id: "",
     start_date: null,
     end_date: null,
-    status: "todo",
+    status: "in_progress",
     priority: null,
     parent_id: null,
   });
@@ -129,6 +129,28 @@ const Projects = () => {
     },
   });
 
+  // Mutation per eliminare progetti
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("projects").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      toast({
+        title: "Progetto eliminato",
+        description: "Il progetto è stato eliminato con successo",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Errore",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -175,7 +197,7 @@ const Projects = () => {
       client_id: "",
       start_date: null,
       end_date: null,
-      status: "todo",
+      status: "in_progress",
       priority: null,
       parent_id: null,
     });
