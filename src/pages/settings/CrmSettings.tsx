@@ -29,15 +29,11 @@ interface Profile {
 }
 
 const colorOptions = [
-  { value: '#9b87f5', label: 'Primary Purple', class: 'bg-[#9b87f5]' },
-  { value: '#7E69AB', label: 'Secondary Purple', class: 'bg-[#7E69AB]' },
-  { value: '#6E59A5', label: 'Tertiary Purple', class: 'bg-[#6E59A5]' },
-  { value: '#1A1F2C', label: 'Dark Purple', class: 'bg-[#1A1F2C]' },
-  { value: '#D6BCFA', label: 'Light Purple', class: 'bg-[#D6BCFA]' },
-  { value: '#8B5CF6', label: 'Vivid Purple', class: 'bg-[#8B5CF6]' },
-  { value: '#D946EF', label: 'Magenta Pink', class: 'bg-[#D946EF]' },
-  { value: '#F97316', label: 'Bright Orange', class: 'bg-[#F97316]' },
-  { value: '#0EA5E9', label: 'Ocean Blue', class: 'bg-[#0EA5E9]' },
+  { value: '#0EA5E9', class: 'bg-[#0EA5E9]' },
+  { value: '#ea384c', class: 'bg-[#ea384c]' },
+  { value: '#8B5CF6', class: 'bg-[#8B5CF6]' },
+  { value: '#F97316', class: 'bg-[#F97316]' },
+  { value: '#9b87f5', class: 'bg-[#9b87f5]' },
 ];
 
 type FormValues = {
@@ -158,17 +154,16 @@ export default function CrmSettings() {
                   <RadioGroup
                     onValueChange={(value) => form.setValue("primary_color", value)}
                     value={form.watch("primary_color")}
-                    className="grid grid-cols-2 gap-4"
+                    className="flex gap-4 items-center"
                   >
                     {colorOptions.map((color) => (
                       <div key={color.value} className="flex items-center space-x-2">
                         <RadioGroupItem value={color.value} id={color.value} />
                         <Label 
                           htmlFor={color.value}
-                          className="flex items-center gap-2 cursor-pointer"
+                          className="cursor-pointer"
                         >
-                          <div className={`w-6 h-6 rounded ${color.class}`} />
-                          <span>{color.label}</span>
+                          <div className={`w-8 h-8 rounded-full ${color.class}`} />
                         </Label>
                       </div>
                     ))}
