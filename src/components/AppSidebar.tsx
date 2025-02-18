@@ -1,5 +1,5 @@
 
-import { Folder, Home, Users, FileText, List } from "lucide-react";
+import { Folder, Home, Users, FileText, List, LogOut } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
