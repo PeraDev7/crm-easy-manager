@@ -1,9 +1,10 @@
 
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "./AppSidebar";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
-import { MainNav } from "./MainNav";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { initialized } = useRequireAuth();
@@ -37,15 +38,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen flex w-full bg-background">
-      <MainNav />
-      <main className="flex-1 overflow-x-hidden">
-        <div className="container py-4">
-          <div className="animate-fadeIn">
-            {children}
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-background">
+        <AppSidebar />
+        <main className="flex-1 overflow-x-hidden">
+          <div className="container py-4">
+            <div className="animate-fadeIn">
+              {children}
+            </div>
           </div>
-        </div>
-      </main>
-    </div>
+        </main>
+      </div>
+    </SidebarProvider>
   );
 }
