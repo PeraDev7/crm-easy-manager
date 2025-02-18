@@ -8,13 +8,14 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Layout } from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Plus, Paperclip, ListTodo, Trash2, Download, Settings } from "lucide-react";
+import { ArrowLeft, Plus, Paperclip, ListTodo, Trash2, Download, Settings, Save } from "lucide-react";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Editor } from "@/components/ui/editor";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
 interface Attachment {
   id: string;
@@ -37,6 +38,7 @@ const ProjectDetails = () => {
   const queryClient = useQueryClient();
 
   const [note, setNote] = useState("");
+  const [unsavedNote, setUnsavedNote] = useState("");
   const [taskTitle, setTaskTitle] = useState("");
   const [fileDescription, setFileDescription] = useState("");
   const [name, setName] = useState("");
@@ -286,6 +288,32 @@ const ProjectDetails = () => {
     }
   };
 
+  const onDragEnd = (result: any) => {
+    if (!result.destination) return;
+
+    const items = Array.from(tasks || []);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    queryClient.setQueryData(["tasks", id], items);
+
+    const updatePromises = items.map((task, index) => {
+      return supabase
+        .from("tasks")
+        .update({ position: index })
+        .eq("id", task.id);
+    });
+
+    Promise.all(updatePromises).catch((error) => {
+      toast({
+        title: "Errore",
+        description: "Errore durante l'aggiornamento dell'ordine dei task",
+        variant: "destructive",
+      });
+      queryClient.invalidateQueries({ queryKey: ["tasks", id] });
+    });
+  };
+
   if (isLoadingProject) {
     return (
       <Layout>
@@ -350,51 +378,72 @@ const ProjectDetails = () => {
               </CardContent>
             </Card>
 
-            <div className="grid gap-4">
-              {isLoadingTasks ? (
-                <div>Caricamento task...</div>
-              ) : (
-                tasks?.map((task) => (
-                  <Card key={task.id} className={cn("overflow-hidden", getTaskStatusColor(task.status))}>
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <ListTodo className="h-4 w-4 text-muted-foreground" />
-                          <span>{task.title}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Select
-                            value={task.status}
-                            onValueChange={(value) =>
-                              updateTaskStatusMutation.mutate({
-                                taskId: task.id,
-                                status: value,
-                              })
-                            }
-                          >
-                            <SelectTrigger className="w-[180px]">
-                              <SelectValue placeholder="Seleziona stato" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="todo">Da fare</SelectItem>
-                              <SelectItem value="in_progress">In lavorazione</SelectItem>
-                              <SelectItem value="completed">Completato</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => deleteTaskMutation.mutate(task.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
-              )}
-            </div>
+            <DragDropContext onDragEnd={onDragEnd}>
+              <Droppable droppableId="tasks">
+                {(provided) => (
+                  <div
+                    {...provided.droppableProps}
+                    ref={provided.innerRef}
+                    className="grid gap-4"
+                  >
+                    {isLoadingTasks ? (
+                      <div>Caricamento task...</div>
+                    ) : (
+                      tasks?.map((task, index) => (
+                        <Draggable key={task.id} draggableId={task.id} index={index}>
+                          {(provided) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                            >
+                              <Card className={cn("overflow-hidden", getTaskStatusColor(task.status))}>
+                                <CardContent className="p-4">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <ListTodo className="h-4 w-4 text-muted-foreground" />
+                                      <span>{task.title}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <Select
+                                        value={task.status}
+                                        onValueChange={(value) =>
+                                          updateTaskStatusMutation.mutate({
+                                            taskId: task.id,
+                                            status: value,
+                                          })
+                                        }
+                                      >
+                                        <SelectTrigger className="w-[180px]">
+                                          <SelectValue placeholder="Seleziona stato" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="todo">Da fare</SelectItem>
+                                          <SelectItem value="in_progress">In lavorazione</SelectItem>
+                                          <SelectItem value="completed">Completato</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => deleteTaskMutation.mutate(task.id)}
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            </div>
+                          )}
+                        </Draggable>
+                      ))
+                    )}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </DragDropContext>
           </TabsContent>
 
           <TabsContent value="files" className="space-y-4">
@@ -471,13 +520,23 @@ const ProjectDetails = () => {
 
           <TabsContent value="notes" className="space-y-4">
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Note del Progetto</CardTitle>
+                <Button 
+                  onClick={() => {
+                    saveNotesMutation.mutate(unsavedNote);
+                    setNote(unsavedNote);
+                  }}
+                  className="gap-2"
+                >
+                  <Save className="h-4 w-4" />
+                  Salva
+                </Button>
               </CardHeader>
               <CardContent>
                 <Editor
                   value={project?.description || ""}
-                  onChange={(value) => saveNotesMutation.mutate(value)}
+                  onChange={(value) => setUnsavedNote(value)}
                 />
               </CardContent>
             </Card>
