@@ -117,6 +117,65 @@ export type Database = {
         }
         Relationships: []
       }
+      events: {
+        Row: {
+          color: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          end_time: string
+          event_type: string
+          google_calendar_id: string | null
+          id: string
+          lead_id: string | null
+          location: string | null
+          reminder_sent: boolean | null
+          start_time: string
+          status: string | null
+          title: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          end_time: string
+          event_type?: string
+          google_calendar_id?: string | null
+          id?: string
+          lead_id?: string | null
+          location?: string | null
+          reminder_sent?: boolean | null
+          start_time: string
+          status?: string | null
+          title: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          end_time?: string
+          event_type?: string
+          google_calendar_id?: string | null
+          id?: string
+          lead_id?: string | null
+          location?: string | null
+          reminder_sent?: boolean | null
+          start_time?: string
+          status?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoice_items: {
         Row: {
           created_at: string

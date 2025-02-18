@@ -5,12 +5,13 @@ import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Table as TableIcon, Grid } from "lucide-react";
+import { Plus, Table as TableIcon, Grid, Calendar as CalendarIcon } from "lucide-react";
 import { SearchBar } from "@/components/SearchBar";
 import { LeadCard } from "@/components/leads/LeadCard";
 import { CreateLeadSheet } from "@/components/leads/CreateLeadSheet";
 import { EditLeadSheet } from "@/components/leads/EditLeadSheet";
 import { LeadNotesSheet } from "@/components/leads/LeadNotesSheet";
+import { LeadCalendar } from "@/components/leads/LeadCalendar";
 import {
   Table,
   TableBody,
@@ -43,7 +44,7 @@ const Leads = () => {
   const [isNotesOpen, setIsNotesOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "table" | "calendar">("grid");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -167,10 +168,12 @@ const Leads = () => {
             <Button
               variant="outline"
               size="icon"
-              onClick={() => setViewMode(viewMode === "grid" ? "table" : "grid")}
+              onClick={() => setViewMode(viewMode === "grid" ? "table" : viewMode === "table" ? "calendar" : "grid")}
             >
               {viewMode === "grid" ? (
                 <TableIcon className="h-4 w-4" />
+              ) : viewMode === "table" ? (
+                <CalendarIcon className="h-4 w-4" />
               ) : (
                 <Grid className="h-4 w-4" />
               )}
@@ -191,6 +194,8 @@ const Leads = () => {
 
         {isLoading ? (
           <div>Caricamento...</div>
+        ) : viewMode === "calendar" ? (
+          <LeadCalendar />
         ) : viewMode === "grid" ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {filteredLeads?.map((lead) => (
