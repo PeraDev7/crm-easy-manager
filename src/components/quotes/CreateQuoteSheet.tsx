@@ -64,14 +64,19 @@ export function CreateQuoteSheet({
             <Select
               value={selectedProject?.id || ""}
               onValueChange={(value) => {
-                const project = projects?.find((p) => p.id === value);
-                setSelectedProject(project || null);
+                if (value === "") {
+                  setSelectedProject(null);
+                } else {
+                  const project = projects?.find((p) => p.id === value);
+                  setSelectedProject(project || null);
+                }
               }}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Seleziona un progetto..." />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="">Nessun progetto</SelectItem>
                 {projects?.map((project) => (
                   <SelectItem key={project.id} value={project.id}>
                     {project.name}
@@ -82,7 +87,7 @@ export function CreateQuoteSheet({
           </div>
           
           <CreateQuoteForm
-            projectId={selectedProject?.id || ""}
+            projectId={selectedProject?.id || null}
             onSubmit={onSubmit}
             onCancel={() => onOpenChange(false)}
           />

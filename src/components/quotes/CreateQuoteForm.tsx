@@ -15,7 +15,7 @@ interface QuoteItem {
 }
 
 interface CreateQuoteFormProps {
-  projectId: string;
+  projectId: string | null;  // Modifichiamo il tipo per accettare null
   onSubmit: (data: any) => void;
   onCancel: () => void;
 }
@@ -71,7 +71,7 @@ export function CreateQuoteForm({
     }
 
     onSubmit({
-      project_id: projectId,
+      project_id: projectId,  // Ora può essere null
       items,
       footer_text: footerText,
       font_size: fontSize,
