@@ -6,6 +6,8 @@ import Projects from "./pages/Projects";
 import Leads from "./pages/Leads";
 import Calendar from "./pages/Calendar";
 import Dashboard from "./pages/Index";
+import SettingsLayout from "./pages/settings/Layout";
+import QuotesSettings from "./pages/settings/QuotesSettings";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "./App.css";
 
@@ -31,6 +33,16 @@ const router = createBrowserRouter([
   {
     path: "/calendar",
     element: <Calendar />,
+  },
+  {
+    path: "/settings",
+    element: <SettingsLayout />,
+    children: [
+      {
+        path: "quotes",
+        element: <QuotesSettings />,
+      },
+    ],
   },
 ]);
 
