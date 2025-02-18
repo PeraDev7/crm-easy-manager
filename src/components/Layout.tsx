@@ -60,15 +60,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
-        <AppSidebar />
+        <div className="relative">
+          <AppSidebar />
+          <Button 
+            variant="ghost" 
+            onClick={handleLogout} 
+            className="absolute bottom-4 left-2 gap-2 text-muted-foreground hover:text-foreground"
+          >
+            <LogOut className="w-4 h-4" />
+            Logout
+          </Button>
+        </div>
         <main className="flex-1 overflow-x-hidden">
-          <div className="container py-6">
-            <div className="flex justify-end mb-4">
-              <Button variant="ghost" onClick={handleLogout} className="gap-2">
-                <LogOut className="w-4 h-4" />
-                Logout
-              </Button>
-            </div>
+          <div className="container py-4">
             <div className="animate-fadeIn">
               {children}
             </div>
