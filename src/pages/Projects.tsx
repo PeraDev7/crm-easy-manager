@@ -52,15 +52,13 @@ type Project = ProjectFormData & {
 };
 
 const Projects = () => {
-  // Utilizziamo il nuovo hook per proteggere la rotta
   useRequireAuth();
-
   const [isOpen, setIsOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [formData, setFormData] = useState<ProjectFormData>({
     name: "",
     description: null,
-    client_id: "",
+    client_id: "", // Questo verrà validato prima dell'invio
     start_date: null,
     end_date: null,
     status: "todo",
@@ -96,6 +94,11 @@ const Projects = () => {
   // Mutation per creare/aggiornare progetti
   const mutation = useMutation({
     mutationFn: async (data: ProjectFormData) => {
+      // Validazione prima dell'invio
+      if (!data.client_id) {
+        throw new Error("Il cliente è obbligatorio");
+      }
+
       const { error } = editingProject
         ? await supabase
             .from("projects")
@@ -126,30 +129,19 @@ const Projects = () => {
     },
   });
 
-  // Mutation per eliminare progetti
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("projects").delete().eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
-      toast({
-        title: "Progetto eliminato",
-        description: "Il progetto è stato eliminato con successo",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Errore",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validazione aggiuntiva prima dell'invio
+    if (!formData.client_id) {
+      toast({
+        title: "Errore",
+        description: "Seleziona un cliente prima di procedere",
+        variant: "destructive",
+      });
+      return;
+    }
+
     mutation.mutate(formData);
   };
 
