@@ -11,7 +11,7 @@ import Clients from "./pages/Clients";
 import Projects from "./pages/Projects";
 import ProjectDetails from "./pages/ProjectDetails";
 import Quotes from "./pages/Quotes";
-import Invoices from "./pages/Invoices";
+import Leads from "./pages/Leads";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 
@@ -98,10 +98,10 @@ const App = () => (
             }
           />
           <Route
-            path="/invoices"
+            path="/leads"
             element={
               <ProtectedRoute>
-                <Invoices />
+                <Leads />
               </ProtectedRoute>
             }
           />
