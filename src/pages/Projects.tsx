@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -6,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useToast } from "@/hooks/use-toast";
 import { Layout } from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
@@ -135,7 +134,6 @@ const Projects = () => {
 
   const deleteProjectMutation = useMutation({
     mutationFn: async (id: string) => {
-      // Prima eliminiamo tutti i task associati
       const { error: taskError } = await supabase
         .from("tasks")
         .delete()
@@ -143,7 +141,6 @@ const Projects = () => {
       
       if (taskError) throw taskError;
 
-      // Poi eliminiamo tutti i file associati
       const { error: fileError } = await supabase
         .from("attachments")
         .delete()
@@ -151,7 +148,6 @@ const Projects = () => {
       
       if (fileError) throw fileError;
 
-      // Infine eliminiamo il progetto
       const { error } = await supabase
         .from("projects")
         .delete()
@@ -197,6 +193,10 @@ const Projects = () => {
 
   const handleDelete = (id: string) => {
     setProjectToDelete(id);
+  };
+
+  const handleProjectClick = (projectId: string) => {
+    navigate(`/projects/${projectId}`);
   };
 
   const filteredProjects = projects?.filter((project) => {
@@ -256,7 +256,7 @@ const Projects = () => {
               <Card 
                 key={project.id}
                 className="hover:bg-accent cursor-pointer transition-colors"
-                onClick={() => navigate(`/projects/${project.id}`)}
+                onClick={() => handleProjectClick(project.id)}
               >
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
