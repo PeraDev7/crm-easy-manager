@@ -9,18 +9,17 @@ import itLocale from "@fullcalendar/core/locales/it";
 import { useState } from "react";
 import { CreateEventSheet } from "./CreateEventSheet";
 import { ViewEventSheet } from "./ViewEventSheet";
-import { cn } from "@/lib/utils";
 
 interface LeadCalendarProps {
   leadId?: string;
 }
 
 const eventColors = [
-  { bg: "#E5DEFF", text: "#6E59A5", border: "#9b87f5" }, // Purple
-  { bg: "#FDE1D3", text: "#C2410C", border: "#F97316" }, // Orange
-  { bg: "#D3E4FD", text: "#0369A1", border: "#0EA5E9" }, // Blue
-  { bg: "#F2FCE2", text: "#3F6212", border: "#84CC16" }, // Green
-  { bg: "#FEF7CD", text: "#854D0E", border: "#EAB308" }, // Yellow
+  { bg: "#F1F0FB", text: "#6E59A5", border: "#F1F0FB" }, // Soft Purple
+  { bg: "#FEF9F8", text: "#C2410C", border: "#FEF9F8" }, // Soft Orange
+  { bg: "#F8FBFE", text: "#0369A1", border: "#F8FBFE" }, // Soft Blue
+  { bg: "#F9FCF6", text: "#3F6212", border: "#F9FCF6" }, // Soft Green
+  { bg: "#FEFDF7", text: "#854D0E", border: "#FEFDF7" }, // Soft Yellow
 ];
 
 export function LeadCalendar({ leadId }: LeadCalendarProps) {
@@ -56,7 +55,7 @@ export function LeadCalendar({ leadId }: LeadCalendarProps) {
           backgroundColor: color.bg,
           textColor: color.text,
           borderColor: color.border,
-          className: "rounded-md shadow-sm border p-1",
+          className: "rounded-sm shadow-sm p-0.5",
           extendedProps: {
             description: event.description,
             location: event.location,
@@ -79,78 +78,89 @@ export function LeadCalendar({ leadId }: LeadCalendarProps) {
   };
 
   return (
-    <div className="bg-background rounded-lg p-4 shadow-sm border">
+    <div className="bg-white rounded-lg shadow-sm">
       <style>
         {`
           .fc {
-            --fc-border-color: #E4E4E7;
-            --fc-today-bg-color: #F4F4F5;
+            --fc-border-color: #F1F1F1;
+            --fc-today-bg-color: #FFFFFF;
             --fc-neutral-bg-color: #FFFFFF;
-            --fc-list-event-hover-bg-color: #F4F4F5;
-            --fc-theme-standard-border-color: #E4E4E7;
+            --fc-list-event-hover-bg-color: #F9FAFB;
+            --fc-theme-standard-border-color: #F1F1F1;
             height: 800px !important;
           }
           .fc-theme-standard .fc-scrollgrid {
-            border: 1px solid #E4E4E7;
-            border-radius: 0.5rem;
+            border: none;
+            border-radius: 0;
           }
           .fc .fc-toolbar {
-            gap: 1rem;
-            margin-bottom: 1.5rem;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            padding: 0.5rem;
           }
           .fc .fc-toolbar-title {
-            font-size: 1.25rem;
-            font-weight: 600;
+            font-size: 1.125rem;
+            font-weight: 500;
           }
           .fc .fc-button {
             background: white;
-            border: 1px solid #E4E4E7;
-            color: #18181B;
-            font-weight: 500;
-            padding: 0.5rem 1rem;
-            border-radius: 0.375rem;
-            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            border: 1px solid #F1F1F1;
+            color: #aaadb0;
+            font-weight: 400;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.25rem;
+            box-shadow: none;
           }
           .fc .fc-button:hover {
-            background: #F4F4F5;
+            background: #F9FAFB;
+            border-color: #F1F1F1;
           }
           .fc .fc-button-primary:not(:disabled).fc-button-active,
           .fc .fc-button-primary:not(:disabled):active {
-            background: #F4F4F5;
-            border-color: #E4E4E7;
+            background: #F9FAFB;
+            border-color: #F1F1F1;
             color: #18181B;
           }
-          .fc-direction-ltr .fc-button-group > .fc-button:not(:last-child) {
-            border-radius: 0.375rem;
-            margin-right: 0.25rem;
-          }
+          .fc-direction-ltr .fc-button-group > .fc-button:not(:last-child),
           .fc-direction-ltr .fc-button-group > .fc-button:not(:first-child) {
-            border-radius: 0.375rem;
-            margin-left: 0.25rem;
+            border-radius: 0.25rem;
+            margin: 0 0.125rem;
           }
           .fc-theme-standard td, .fc-theme-standard th {
-            border: 1px solid #E4E4E7;
+            border: 1px solid #F1F1F1;
           }
           .fc-timegrid-slot {
-            height: 3rem !important;
+            height: 2.5rem !important;
           }
           .fc-day-today {
-            background: #F9FAFB !important;
+            background: #FFFFFF !important;
           }
           .fc-event {
-            border-radius: 0.375rem;
-            padding: 0.25rem;
+            border-radius: 0.125rem;
+            padding: 0.125rem;
             font-size: 0.875rem;
-            transition: all 0.2s;
+            border: none;
+            transition: all 0.15s;
           }
           .fc-event:hover {
             transform: translateY(-1px);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
           }
           .fc-toolbar-chunk {
             display: flex;
-            gap: 0.5rem;
+            gap: 0.25rem;
             align-items: center;
+          }
+          .fc-col-header-cell {
+            padding: 0.5rem 0;
+            font-weight: 500;
+          }
+          .fc-timegrid-axis {
+            padding: 0.25rem;
+          }
+          .fc-timegrid-slot-label {
+            font-size: 0.75rem;
+            color: #aaadb0;
           }
         `}
       </style>
