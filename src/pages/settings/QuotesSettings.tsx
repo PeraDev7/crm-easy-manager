@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,7 +41,6 @@ export default function QuotesSettings() {
     },
   });
 
-  // Quando i dati vengono caricati, aggiorniamo il form
   React.useEffect(() => {
     if (settings) {
       form.reset(settings);
@@ -87,10 +85,10 @@ export default function QuotesSettings() {
 
   return (
     <Layout>
-      <div className="space-y-6">
-        <div>
-          <h3 className="text-lg font-medium">Impostazioni Preventivi</h3>
-          <p className="text-sm text-muted-foreground">
+      <div className="container py-6">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold tracking-tight">Impostazioni Preventivi</h2>
+          <p className="text-muted-foreground">
             Gestisci i dati aziendali che verranno utilizzati nei preventivi
           </p>
         </div>

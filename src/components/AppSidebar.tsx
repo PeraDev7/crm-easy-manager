@@ -5,22 +5,29 @@ import {
   Calendar,
   KanbanSquare,
   Settings,
+  FileText,
+  User,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
+  SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 
 export function AppSidebar() {
+  const location = useLocation();
+
   return (
     <Sidebar>
       <SidebarHeader>
@@ -34,7 +41,6 @@ export function AppSidebar() {
       
       <SidebarContent>
         <SidebarMenu>
-          
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
               <Link to="/">
@@ -72,12 +78,36 @@ export function AppSidebar() {
           </SidebarMenuItem>
 
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
+            <SidebarMenuButton asChild isActive={location.pathname.startsWith("/settings")}>
               <Link to="/settings">
                 <Settings className="w-4 h-4" />
                 <span>Impostazioni</span>
               </Link>
             </SidebarMenuButton>
+            <SidebarMenuSub>
+              <SidebarMenuSubItem>
+                <SidebarMenuSubButton
+                  asChild
+                  isActive={location.pathname === "/settings/quotes"}
+                >
+                  <Link to="/settings/quotes">
+                    <FileText className="w-4 h-4" />
+                    <span>Preventivi</span>
+                  </Link>
+                </SidebarMenuSubButton>
+              </SidebarMenuSubItem>
+              <SidebarMenuSubItem>
+                <SidebarMenuSubButton
+                  asChild
+                  isActive={location.pathname === "/settings/user"}
+                >
+                  <Link to="/settings/user">
+                    <User className="w-4 h-4" />
+                    <span>Utente</span>
+                  </Link>
+                </SidebarMenuSubButton>
+              </SidebarMenuSubItem>
+            </SidebarMenuSub>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarContent>
