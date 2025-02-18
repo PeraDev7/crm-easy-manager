@@ -12,33 +12,54 @@ export type Database = {
       clients: {
         Row: {
           address: string | null
+          billing_address: string | null
+          business_name: string | null
+          color: string | null
           created_at: string
           created_by: string
           email: string | null
           id: string
           name: string
           notes: string | null
+          pec: string | null
           phone: string | null
+          sdi: string | null
+          tax_code: string | null
+          vat_number: string | null
         }
         Insert: {
           address?: string | null
+          billing_address?: string | null
+          business_name?: string | null
+          color?: string | null
           created_at?: string
           created_by: string
           email?: string | null
           id?: string
           name: string
           notes?: string | null
+          pec?: string | null
           phone?: string | null
+          sdi?: string | null
+          tax_code?: string | null
+          vat_number?: string | null
         }
         Update: {
           address?: string | null
+          billing_address?: string | null
+          business_name?: string | null
+          color?: string | null
           created_at?: string
           created_by?: string
           email?: string | null
           id?: string
           name?: string
           notes?: string | null
+          pec?: string | null
           phone?: string | null
+          sdi?: string | null
+          tax_code?: string | null
+          vat_number?: string | null
         }
         Relationships: []
       }

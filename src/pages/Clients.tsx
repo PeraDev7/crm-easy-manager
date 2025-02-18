@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,6 +28,13 @@ type ClientFormData = {
   phone: string | null;
   address: string | null;
   notes: string | null;
+  business_name: string | null;
+  vat_number: string | null;
+  tax_code: string | null;
+  sdi: string | null;
+  pec: string | null;
+  billing_address: string | null;
+  color: string | null;
 };
 
 // Tipo per il cliente dal database
@@ -47,6 +53,13 @@ const Clients = () => {
     phone: null,
     address: null,
     notes: null,
+    business_name: null,
+    vat_number: null,
+    tax_code: null,
+    sdi: null,
+    pec: null,
+    billing_address: null,
+    color: null,
   });
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -140,6 +153,13 @@ const Clients = () => {
       phone: client.phone,
       address: client.address,
       notes: client.notes,
+      business_name: client.business_name,
+      vat_number: client.vat_number,
+      tax_code: client.tax_code,
+      sdi: client.sdi,
+      pec: client.pec,
+      billing_address: client.billing_address,
+      color: client.color,
     });
     setIsOpen(true);
   };
@@ -159,6 +179,13 @@ const Clients = () => {
       phone: null,
       address: null,
       notes: null,
+      business_name: null,
+      vat_number: null,
+      tax_code: null,
+      sdi: null,
+      pec: null,
+      billing_address: null,
+      color: null,
     });
   };
 
@@ -182,8 +209,14 @@ const Clients = () => {
           {clients?.map((client) => (
             <Card
               key={client.id}
-              className="hover:shadow-lg transition-shadow"
+              className="hover:shadow-lg transition-shadow relative overflow-hidden"
             >
+              {client.color && (
+                <div 
+                  className="absolute top-0 left-0 w-1 h-full" 
+                  style={{ backgroundColor: client.color }}
+                />
+              )}
               <CardHeader>
                 <CardTitle className="flex justify-between items-start">
                   <span>{client.name}</span>
@@ -204,12 +237,16 @@ const Clients = () => {
                     </Button>
                   </div>
                 </CardTitle>
-                <CardDescription>{client.email}</CardDescription>
+                <CardDescription>
+                  {client.business_name || client.email}
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2 text-sm text-muted-foreground">
                   {client.phone && <p>📞 {client.phone}</p>}
                   {client.address && <p>📍 {client.address}</p>}
+                  {client.vat_number && <p>🏢 P.IVA: {client.vat_number}</p>}
+                  {client.pec && <p>📧 PEC: {client.pec}</p>}
                   {client.notes && <p>📝 {client.notes}</p>}
                 </div>
               </CardContent>
@@ -231,48 +268,128 @@ const Clients = () => {
             </SheetDescription>
           </SheetHeader>
           <form onSubmit={handleSubmit} className="space-y-6 mt-6">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Nome *</label>
-              <Input
-                required
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                placeholder="Nome del cliente"
-              />
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Informazioni Generali</h3>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Nome *</label>
+                <Input
+                  required
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  placeholder="Nome del cliente"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Email</label>
+                <Input
+                  type="email"
+                  value={formData.email || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value || null })
+                  }
+                  placeholder="Email del cliente"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Telefono</label>
+                <Input
+                  value={formData.phone || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, phone: e.target.value || null })
+                  }
+                  placeholder="Numero di telefono"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Indirizzo</label>
+                <Input
+                  value={formData.address || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, address: e.target.value || null })
+                  }
+                  placeholder="Indirizzo"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Colore</label>
+                <Input
+                  type="color"
+                  value={formData.color || "#000000"}
+                  onChange={(e) =>
+                    setFormData({ ...formData, color: e.target.value })
+                  }
+                  className="h-10 w-20"
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Email</label>
-              <Input
-                type="email"
-                value={formData.email || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value || null })
-                }
-                placeholder="Email del cliente"
-              />
+
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Dati di Fatturazione</h3>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Ragione Sociale</label>
+                <Input
+                  value={formData.business_name || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, business_name: e.target.value || null })
+                  }
+                  placeholder="Ragione sociale"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Partita IVA</label>
+                <Input
+                  value={formData.vat_number || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, vat_number: e.target.value || null })
+                  }
+                  placeholder="Partita IVA"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Codice Fiscale</label>
+                <Input
+                  value={formData.tax_code || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, tax_code: e.target.value || null })
+                  }
+                  placeholder="Codice fiscale"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Codice SDI</label>
+                <Input
+                  value={formData.sdi || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, sdi: e.target.value || null })
+                  }
+                  placeholder="Codice SDI"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">PEC</label>
+                <Input
+                  type="email"
+                  value={formData.pec || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, pec: e.target.value || null })
+                  }
+                  placeholder="Indirizzo PEC"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Indirizzo di Fatturazione</label>
+                <Input
+                  value={formData.billing_address || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, billing_address: e.target.value || null })
+                  }
+                  placeholder="Indirizzo di fatturazione"
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Telefono</label>
-              <Input
-                value={formData.phone || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, phone: e.target.value || null })
-                }
-                placeholder="Numero di telefono"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Indirizzo</label>
-              <Input
-                value={formData.address || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, address: e.target.value || null })
-                }
-                placeholder="Indirizzo completo"
-              />
-            </div>
+
             <div className="space-y-2">
               <label className="text-sm font-medium">Note</label>
               <Input
@@ -283,6 +400,7 @@ const Clients = () => {
                 placeholder="Note aggiuntive"
               />
             </div>
+
             <div className="flex justify-end gap-4 pt-4">
               <Button variant="outline" type="button" onClick={handleClose}>
                 Annulla
