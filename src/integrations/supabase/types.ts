@@ -9,6 +9,57 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      attachments: {
+        Row: {
+          created_at: string
+          created_by: string
+          file_path: string
+          file_size: number | null
+          file_type: string | null
+          id: string
+          name: string
+          project_id: string | null
+          task_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          file_path: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          name: string
+          project_id?: string | null
+          task_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          file_path?: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          name?: string
+          project_id?: string | null
+          task_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attachments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attachments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           address: string | null
@@ -96,6 +147,8 @@ export type Database = {
           end_date: string | null
           id: string
           name: string
+          parent_id: string | null
+          priority: string | null
           start_date: string | null
           status: string | null
         }
@@ -107,6 +160,8 @@ export type Database = {
           end_date?: string | null
           id?: string
           name: string
+          parent_id?: string | null
+          priority?: string | null
           start_date?: string | null
           status?: string | null
         }
@@ -118,6 +173,8 @@ export type Database = {
           end_date?: string | null
           id?: string
           name?: string
+          parent_id?: string | null
+          priority?: string | null
           start_date?: string | null
           status?: string | null
         }
@@ -127,6 +184,121 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reminders: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          due_date: string
+          id: string
+          project_id: string | null
+          reminded_at: string | null
+          task_id: string | null
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          due_date: string
+          id?: string
+          project_id?: string | null
+          reminded_at?: string | null
+          task_id?: string | null
+          title: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          due_date?: string
+          id?: string
+          project_id?: string | null
+          reminded_at?: string | null
+          task_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminders_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reminders_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          assignee_id: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          due_date: string | null
+          id: string
+          parent_id: string | null
+          priority: string | null
+          project_id: string
+          status: string | null
+          title: string
+        }
+        Insert: {
+          assignee_id?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          parent_id?: string | null
+          priority?: string | null
+          project_id: string
+          status?: string | null
+          title: string
+        }
+        Update: {
+          assignee_id?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          parent_id?: string | null
+          priority?: string | null
+          project_id?: string
+          status?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
