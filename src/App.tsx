@@ -3,6 +3,7 @@ import React from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Clients from "./pages/Clients";
 import Projects from "./pages/Projects";
+import ProjectDetails from "./pages/ProjectDetails";
 import Leads from "./pages/Leads";
 import Calendar from "./pages/Calendar";
 import Dashboard from "./pages/Index";
@@ -32,6 +33,10 @@ const router = createBrowserRouter([
   {
     path: "/projects",
     element: <Projects />,
+  },
+  {
+    path: "/projects/:id",
+    element: <ProjectDetails />,
   },
   {
     path: "/leads",

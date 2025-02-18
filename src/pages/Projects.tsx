@@ -196,6 +196,7 @@ const Projects = () => {
   };
 
   const handleProjectClick = (projectId: string) => {
+    console.log("Navigating to project:", projectId);
     navigate(`/projects/${projectId}`);
   };
 
@@ -296,8 +297,6 @@ const Projects = () => {
         )}
 
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
-          <SheetTrigger asChild>
-          </SheetTrigger>
           <SheetContent>
             <SheetHeader>
               <SheetTitle>Nuovo Progetto</SheetTitle>
@@ -343,8 +342,6 @@ const Projects = () => {
         </Sheet>
 
         <Sheet open={isEditOpen} onOpenChange={setIsEditOpen}>
-          <SheetTrigger asChild>
-          </SheetTrigger>
           <SheetContent>
             <SheetHeader>
               <SheetTitle>Modifica Progetto</SheetTitle>
