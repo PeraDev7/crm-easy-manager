@@ -17,6 +17,24 @@ export function Layout({ children }: { children: React.ReactNode }) {
       const { data, error } = await supabase
         .from("crm_settings")
         .select("*")
+        .eq("created_by", user.id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: profile } = useQuery({
+    queryKey: ["user-profile"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
         .single();
 
       if (error) throw error;
@@ -25,12 +43,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
   });
 
   useEffect(() => {
-    if (settings?.dark_mode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+    if (profile?.primary_color) {
+      document.documentElement.style.setProperty('--brand-color', profile.primary_color);
     }
-  }, [settings?.dark_mode]);
+  }, [profile?.primary_color]);
 
   if (!initialized) {
     return null;

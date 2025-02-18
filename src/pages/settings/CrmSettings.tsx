@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -201,7 +200,7 @@ export default function CrmSettings() {
               </div>
 
               <div className="flex justify-end">
-                <Button type="submit">
+                <Button type="submit" className="bg-brand hover:bg-brand/90">
                   Salva Impostazioni
                 </Button>
               </div>
