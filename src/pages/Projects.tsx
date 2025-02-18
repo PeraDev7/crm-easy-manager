@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -10,9 +9,19 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { useToast } from "@/hooks/use-toast";
 import { Layout } from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Pencil, Trash2, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, AlertTriangle } from "lucide-react";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type Project = {
   id: string;
@@ -35,6 +44,7 @@ const Projects = () => {
   const [clientId, setClientId] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedClientFilter, setSelectedClientFilter] = useState("all");
+  const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -124,6 +134,20 @@ const Projects = () => {
 
   const deleteProjectMutation = useMutation({
     mutationFn: async (id: string) => {
+      const { data: tasks } = await supabase
+        .from("tasks")
+        .select("id")
+        .eq("project_id", id);
+
+      const { data: files } = await supabase
+        .from("attachments")
+        .select("id")
+        .eq("project_id", id);
+
+      if ((tasks && tasks.length > 0) || (files && files.length > 0)) {
+        throw new Error("Non è possibile eliminare il progetto perché contiene task o file. Rimuovili prima di procedere.");
+      }
+
       const { error } = await supabase.from("projects").delete().eq("id", id);
       if (error) throw error;
     },
@@ -133,6 +157,7 @@ const Projects = () => {
         title: "Progetto eliminato",
         description: "Il progetto è stato eliminato con successo",
       });
+      setProjectToDelete(null);
     },
     onError: (error: any) => {
       toast({
@@ -140,6 +165,7 @@ const Projects = () => {
         description: error.message,
         variant: "destructive",
       });
+      setProjectToDelete(null);
     },
   });
 
@@ -162,7 +188,7 @@ const Projects = () => {
   };
 
   const handleDelete = (id: string) => {
-    deleteProjectMutation.mutate(id);
+    setProjectToDelete(id);
   };
 
   const filteredProjects = projects?.filter((project) => {
@@ -354,6 +380,35 @@ const Projects = () => {
             <Button onClick={handleEditSubmit}>Aggiorna Progetto</Button>
           </SheetContent>
         </Sheet>
+
+        <AlertDialog open={!!projectToDelete} onOpenChange={() => setProjectToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+                Conferma eliminazione
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                Stai per eliminare questo progetto. Questa azione non può essere annullata.
+                <br /><br />
+                <strong>Nota:</strong> Non è possibile eliminare il progetto se contiene task o file. Rimuovili prima di procedere con l'eliminazione.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Annulla</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={() => {
+                  if (projectToDelete) {
+                    deleteProjectMutation.mutate(projectToDelete);
+                  }
+                }}
+              >
+                Elimina
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </Layout>
   );
