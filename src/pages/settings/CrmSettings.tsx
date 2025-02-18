@@ -45,13 +45,13 @@ export default function CrmSettings() {
   const { toast } = useToast();
   const form = useForm<FormValues>();
 
-  const { data: settings } = useQuery({
+  const { data: settings, refetch: refetchSettings } = useQuery({
     queryKey: ["crm-settings"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("crm_settings")
         .select("*")
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data as CrmSettings;
@@ -81,6 +81,12 @@ export default function CrmSettings() {
         app_name: settings.app_name,
         primary_color: profile.primary_color,
       });
+    } else if (!settings && profile) {
+      // Se non ci sono impostazioni, impostiamo i valori di default
+      form.reset({
+        app_name: "CRM",
+        primary_color: profile.primary_color,
+      });
     }
   }, [settings, profile, form]);
 
@@ -89,7 +95,7 @@ export default function CrmSettings() {
       const user = (await supabase.auth.getUser()).data.user;
       if (!user) throw new Error("User not found");
 
-      // Aggiorna le impostazioni CRM
+      // Aggiorna o crea le impostazioni CRM
       const { error: settingsError } = await supabase
         .from("crm_settings")
         .upsert({
@@ -109,6 +115,8 @@ export default function CrmSettings() {
         .eq("id", user.id);
 
       if (profileError) throw profileError;
+
+      await refetchSettings();
 
       toast({
         title: "Impostazioni salvate",
