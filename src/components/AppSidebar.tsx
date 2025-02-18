@@ -40,7 +40,7 @@ export function AppSidebar() {
   return (
     <nav className="w-64 h-screen border-r bg-sidebar p-4 flex flex-col">
       <div className="p-4">
-        <h1 className="font-bold">CRM</h1>
+        <h1 className="font-bold">VitoCRM</h1>
         <p className="text-sm text-muted-foreground">
           Gestisci la tua attività
         </p>
@@ -192,14 +192,28 @@ export function AppSidebar() {
         </div>
       </div>
 
-      <Button
-        variant="ghost"
-        className="mt-auto gap-2 text-muted-foreground hover:text-foreground"
-        onClick={handleLogout}
-      >
-        <LogOut className="w-4 h-4" />
-        <span>Logout</span>
-      </Button>
+      <div className="mt-auto space-y-4">
+        <div className="px-4 py-2 border-t text-sm text-muted-foreground">
+          <p>Powered by</p>
+          <a 
+            href="https://www.risolvity.it" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-primary hover:underline"
+          >
+            Risolvity
+          </a>
+        </div>
+        
+        <Button
+          variant="ghost"
+          className="w-full gap-2 text-muted-foreground hover:text-foreground"
+          onClick={handleLogout}
+        >
+          <LogOut className="w-4 h-4" />
+          <span>Logout</span>
+        </Button>
+      </div>
     </nav>
   );
 }
