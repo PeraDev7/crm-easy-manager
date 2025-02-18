@@ -16,7 +16,6 @@ const Auth = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Controlla se l'utente è già autenticato
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
@@ -35,21 +34,55 @@ const Auth = () => {
         const { error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            emailRedirectTo: window.location.origin,
+          },
         });
-        if (error) throw error;
-        toast({
-          title: "Registrazione completata!",
-          description: "Controlla la tua email per verificare l'account.",
-        });
+        
+        if (error) {
+          if (error.message.includes("User already registered")) {
+            toast({
+              title: "Utente già registrato",
+              description: "Prova ad effettuare il login invece.",
+              variant: "destructive",
+            });
+          } else {
+            throw error;
+          }
+        } else {
+          toast({
+            title: "Registrazione completata!",
+            description: "Controlla la tua email per verificare l'account.",
+          });
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
-        if (error) throw error;
-        navigate("/");
+        
+        if (error) {
+          if (error.message.includes("Invalid login credentials")) {
+            toast({
+              title: "Credenziali non valide",
+              description: "Email o password non corrette. Se non hai un account, registrati.",
+              variant: "destructive",
+            });
+          } else if (error.message.includes("Email not confirmed")) {
+            toast({
+              title: "Email non verificata",
+              description: "Per favore verifica la tua email prima di accedere.",
+              variant: "destructive",
+            });
+          } else {
+            throw error;
+          }
+        } else {
+          navigate("/");
+        }
       }
     } catch (error: any) {
+      console.error("Auth error:", error);
       toast({
         title: "Errore",
         description: error.message,
@@ -89,6 +122,7 @@ const Auth = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                minLength={6}
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
