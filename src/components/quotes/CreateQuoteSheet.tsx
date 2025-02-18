@@ -62,9 +62,9 @@ export function CreateQuoteSheet({
           <div>
             <Label>Progetto (opzionale)</Label>
             <Select
-              value={selectedProject?.id || ""}
+              value={selectedProject?.id || "none"}
               onValueChange={(value) => {
-                if (value === "") {
+                if (value === "none") {
                   setSelectedProject(null);
                 } else {
                   const project = projects?.find((p) => p.id === value);
@@ -76,7 +76,7 @@ export function CreateQuoteSheet({
                 <SelectValue placeholder="Seleziona un progetto..." />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Nessun progetto</SelectItem>
+                <SelectItem value="none">Nessun progetto</SelectItem>
                 {projects?.map((project) => (
                   <SelectItem key={project.id} value={project.id}>
                     {project.name}
