@@ -5,25 +5,44 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { useForm } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface CrmSettings {
   id: string;
   created_at: string;
   created_by: string;
   app_name: string;
-  dark_mode: boolean;
 }
 
-type CrmSettingsForm = Pick<CrmSettings, 'app_name' | 'dark_mode'>;
+interface UserProfile {
+  id: string;
+  primary_color: string;
+}
+
+const colorOptions = [
+  { value: '#9b87f5', label: 'Primary Purple', class: 'bg-[#9b87f5]' },
+  { value: '#7E69AB', label: 'Secondary Purple', class: 'bg-[#7E69AB]' },
+  { value: '#6E59A5', label: 'Tertiary Purple', class: 'bg-[#6E59A5]' },
+  { value: '#1A1F2C', label: 'Dark Purple', class: 'bg-[#1A1F2C]' },
+  { value: '#D6BCFA', label: 'Light Purple', class: 'bg-[#D6BCFA]' },
+  { value: '#8B5CF6', label: 'Vivid Purple', class: 'bg-[#8B5CF6]' },
+  { value: '#D946EF', label: 'Magenta Pink', class: 'bg-[#D946EF]' },
+  { value: '#F97316', label: 'Bright Orange', class: 'bg-[#F97316]' },
+  { value: '#0EA5E9', label: 'Ocean Blue', class: 'bg-[#0EA5E9]' },
+];
+
+type FormValues = {
+  app_name: string;
+  primary_color: string;
+};
 
 export default function CrmSettings() {
   const { toast } = useToast();
-  const form = useForm<CrmSettingsForm>();
+  const form = useForm<FormValues>();
 
   const { data: settings } = useQuery({
     queryKey: ["crm-settings"],
@@ -38,35 +57,55 @@ export default function CrmSettings() {
     },
   });
 
+  const { data: profile } = useQuery({
+    queryKey: ["user-profile"],
+    queryFn: async () => {
+      const user = (await supabase.auth.getUser()).data.user;
+      if (!user) throw new Error("User not found");
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      if (error) throw error;
+      return data as UserProfile;
+    },
+  });
+
   React.useEffect(() => {
-    if (settings) {
+    if (settings && profile) {
       form.reset({
         app_name: settings.app_name,
-        dark_mode: settings.dark_mode,
-      });
-    } else {
-      // Default values
-      form.reset({
-        app_name: "CRM",
-        dark_mode: false,
+        primary_color: profile.primary_color,
       });
     }
-  }, [settings, form]);
+  }, [settings, profile, form]);
 
-  const onSubmit = async (data: CrmSettingsForm) => {
+  const onSubmit = async (data: FormValues) => {
     try {
       const user = (await supabase.auth.getUser()).data.user;
       if (!user) throw new Error("User not found");
 
-      const { error } = await supabase
+      // Aggiorna le impostazioni CRM
+      const { error: settingsError } = await supabase
         .from("crm_settings")
         .upsert({
-          ...data,
+          app_name: data.app_name,
           created_by: user.id,
           ...(settings?.id ? { id: settings.id } : {}),
         });
 
-      if (error) throw error;
+      if (settingsError) throw settingsError;
+
+      // Aggiorna il colore primario nel profilo utente
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({ primary_color: data.primary_color })
+        .eq("id", user.id);
+
+      if (profileError) throw profileError;
 
       toast({
         title: "Impostazioni salvate",
@@ -107,18 +146,26 @@ export default function CrmSettings() {
                   />
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="dark_mode">Modalità Scura</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Abilita o disabilita la modalità scura dell'applicazione
-                    </p>
-                  </div>
-                  <Switch
-                    id="dark_mode"
-                    checked={form.watch("dark_mode")}
-                    onCheckedChange={(checked) => form.setValue("dark_mode", checked)}
-                  />
+                <div className="space-y-2">
+                  <Label>Colore Primario</Label>
+                  <RadioGroup
+                    onValueChange={(value) => form.setValue("primary_color", value)}
+                    value={form.watch("primary_color")}
+                    className="grid grid-cols-2 gap-4"
+                  >
+                    {colorOptions.map((color) => (
+                      <div key={color.value} className="flex items-center space-x-2">
+                        <RadioGroupItem value={color.value} id={color.value} />
+                        <Label 
+                          htmlFor={color.value}
+                          className="flex items-center gap-2 cursor-pointer"
+                        >
+                          <div className={`w-6 h-6 rounded ${color.class}`} />
+                          <span>{color.label}</span>
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
                 </div>
               </div>
 
