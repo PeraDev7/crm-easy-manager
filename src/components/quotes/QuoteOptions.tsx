@@ -73,14 +73,16 @@ export function QuoteOptions({
       if (error) throw error;
       return data;
     },
-    onSuccess: (data) => {
-      if (data) {
-        onLogoUrlChange(data.logo_url || "");
-        onFooterTextChange(data.footer_text || "");
-        onFontSizeChange(data.font_size || "medium");
-      }
-    },
   });
+
+  // Aggiorna i valori quando il template viene caricato
+  React.useEffect(() => {
+    if (template) {
+      onLogoUrlChange(template.logo_url || "");
+      onFooterTextChange(template.footer_text || "");
+      onFontSizeChange(template.font_size || "medium");
+    }
+  }, [template, onLogoUrlChange, onFooterTextChange, onFontSizeChange]);
 
   const handleChange = (field: "logo_url" | "footer_text" | "font_size", value: string) => {
     switch (field) {
