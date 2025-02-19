@@ -40,7 +40,7 @@ export function ServiceSelector({ services, onSelect }: ServiceSelectorProps) {
           aria-expanded={open}
           className="w-full justify-between"
         >
-          {value
+          {value && services
             ? services.find((service) => service.id === value)?.description
             : "Seleziona un servizio..."}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -51,7 +51,7 @@ export function ServiceSelector({ services, onSelect }: ServiceSelectorProps) {
           <CommandInput placeholder="Cerca servizio..." />
           <CommandEmpty>Nessun servizio trovato.</CommandEmpty>
           <CommandGroup>
-            {services.map((service) => (
+            {services?.map((service) => (
               <CommandItem
                 key={service.id}
                 value={service.id}

@@ -22,7 +22,7 @@ export function QuoteItemsList({ items, onItemsChange }: QuoteItemsListProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: services } = useQuery({
+  const { data: services = [] } = useQuery({
     queryKey: ["services"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -111,12 +111,10 @@ export function QuoteItemsList({ items, onItemsChange }: QuoteItemsListProps) {
                 onItemsChange(newItems);
               }}
             />
-            {services && services.length > 0 && (
-              <ServiceSelector
-                services={services}
-                onSelect={(service) => handleServiceSelect(index, service)}
-              />
-            )}
+            <ServiceSelector
+              services={services}
+              onSelect={(service) => handleServiceSelect(index, service)}
+            />
           </div>
           <div className="col-span-2">
             <Input
