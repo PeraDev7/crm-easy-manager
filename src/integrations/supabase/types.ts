@@ -571,30 +571,6 @@ export type Database = {
           },
         ]
       }
-      services: {
-        Row: {
-          created_at: string
-          created_by: string
-          description: string
-          id: string
-          unit_price: number
-        }
-        Insert: {
-          created_at?: string
-          created_by: string
-          description: string
-          id?: string
-          unit_price?: number
-        }
-        Update: {
-          created_at?: string
-          created_by?: string
-          description?: string
-          id?: string
-          unit_price?: number
-        }
-        Relationships: []
-      }
       tasks: {
         Row: {
           assignee_id: string | null
