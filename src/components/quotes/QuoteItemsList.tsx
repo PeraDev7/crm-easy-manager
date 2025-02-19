@@ -1,7 +1,11 @@
 
-import { Plus, Trash } from "lucide-react";
+import { Plus, Save, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { ServiceSelector } from "./ServiceSelector";
+import { useToast } from "@/hooks/use-toast";
 
 type QuoteItem = {
   description: string;
@@ -15,12 +19,63 @@ interface QuoteItemsListProps {
 }
 
 export function QuoteItemsList({ items, onItemsChange }: QuoteItemsListProps) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: services } = useQuery({
+    queryKey: ["services"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("services")
+        .select("*")
+        .order("description");
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const handleAddItem = () => {
     onItemsChange([...items, { description: "", quantity: 1, unit_price: 0 }]);
   };
 
   const handleRemoveItem = (index: number) => {
     onItemsChange(items.filter((_, i) => i !== index));
+  };
+
+  const handleSaveService = async (index: number) => {
+    try {
+      const item = items[index];
+      const { error } = await supabase.from("services").insert({
+        description: item.description,
+        unit_price: item.unit_price,
+      });
+
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ["services"] });
+      toast({
+        title: "Servizio salvato",
+        description: "Il servizio è stato salvato con successo.",
+      });
+    } catch (error) {
+      console.error("Error saving service:", error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante il salvataggio del servizio.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleServiceSelect = (index: number, service: { description: string; unit_price: number }) => {
+    const newItems = [...items];
+    newItems[index] = {
+      ...newItems[index],
+      description: service.description,
+      unit_price: service.unit_price,
+    };
+    onItemsChange(newItems);
   };
 
   return (
@@ -35,7 +90,7 @@ export function QuoteItemsList({ items, onItemsChange }: QuoteItemsListProps) {
 
       {items.map((item, index) => (
         <div key={index} className="grid grid-cols-12 gap-4">
-          <div className="col-span-6">
+          <div className="col-span-6 space-y-2">
             <Input
               placeholder="Descrizione"
               value={item.description}
@@ -45,6 +100,12 @@ export function QuoteItemsList({ items, onItemsChange }: QuoteItemsListProps) {
                 onItemsChange(newItems);
               }}
             />
+            {services && services.length > 0 && (
+              <ServiceSelector
+                services={services}
+                onSelect={(service) => handleServiceSelect(index, service)}
+              />
+            )}
           </div>
           <div className="col-span-2">
             <Input
@@ -74,7 +135,17 @@ export function QuoteItemsList({ items, onItemsChange }: QuoteItemsListProps) {
               }}
             />
           </div>
-          <div className="col-span-1">
+          <div className="col-span-1 flex gap-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => handleSaveService(index)}
+              disabled={!item.description || !item.unit_price}
+              title="Salva come servizio"
+            >
+              <Save className="h-4 w-4" />
+            </Button>
             <Button
               type="button"
               variant="ghost"
