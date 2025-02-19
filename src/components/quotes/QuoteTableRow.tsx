@@ -23,7 +23,6 @@ interface QuoteTableRowProps {
       id: string;
       name: string;
       business_name: string | null;
-      email: string | null;
     } | null;
   };
   onView: (id: string) => void;
@@ -32,12 +31,12 @@ interface QuoteTableRowProps {
   onDownload: (id: string) => void;
 }
 
-export function QuoteTableRow({
-  quote,
-  onView,
-  onEdit,
+export function QuoteTableRow({ 
+  quote, 
+  onView, 
+  onEdit, 
   onDelete,
-  onDownload
+  onDownload 
 }: QuoteTableRowProps) {
   return (
     <TableRow>
@@ -57,10 +56,6 @@ export function QuoteTableRow({
       <TableCell className="text-right">
         <QuoteActions
           quoteId={quote.id}
-          status={quote.status}
-          clientEmail={quote.client?.email || undefined}
-          clientName={quote.client?.name || quote.client?.business_name || undefined}
-          quoteNumber={quote.quote_number}
           onView={() => onView(quote.id)}
           onEdit={() => onEdit(quote.id)}
           onDelete={() => onDelete(quote.id)}
