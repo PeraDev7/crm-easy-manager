@@ -27,9 +27,11 @@ interface ServiceSelectorProps {
   onSelect: (service: Service) => void;
 }
 
-export function ServiceSelector({ services, onSelect }: ServiceSelectorProps) {
+export function ServiceSelector({ services = [], onSelect }: ServiceSelectorProps) {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
+
+  const selectedService = services.find((service) => service.id === value);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -40,9 +42,7 @@ export function ServiceSelector({ services, onSelect }: ServiceSelectorProps) {
           aria-expanded={open}
           className="w-full justify-between"
         >
-          {value && services
-            ? services.find((service) => service.id === value)?.description
-            : "Seleziona un servizio..."}
+          {selectedService?.description || "Seleziona un servizio..."}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -51,7 +51,7 @@ export function ServiceSelector({ services, onSelect }: ServiceSelectorProps) {
           <CommandInput placeholder="Cerca servizio..." />
           <CommandEmpty>Nessun servizio trovato.</CommandEmpty>
           <CommandGroup>
-            {services?.map((service) => (
+            {Array.isArray(services) && services.map((service) => (
               <CommandItem
                 key={service.id}
                 value={service.id}

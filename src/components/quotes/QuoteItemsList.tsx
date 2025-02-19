@@ -1,4 +1,3 @@
-
 import { Plus, Save, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +21,7 @@ export function QuoteItemsList({ items, onItemsChange }: QuoteItemsListProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: services = [] } = useQuery({
+  const { data: services = [], isLoading } = useQuery({
     queryKey: ["services"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -31,7 +30,7 @@ export function QuoteItemsList({ items, onItemsChange }: QuoteItemsListProps) {
         .order("description");
       
       if (error) throw error;
-      return data;
+      return data || [];
     },
   });
 
@@ -111,10 +110,12 @@ export function QuoteItemsList({ items, onItemsChange }: QuoteItemsListProps) {
                 onItemsChange(newItems);
               }}
             />
-            <ServiceSelector
-              services={services}
-              onSelect={(service) => handleServiceSelect(index, service)}
-            />
+            {!isLoading && (
+              <ServiceSelector
+                services={services}
+                onSelect={(service) => handleServiceSelect(index, service)}
+              />
+            )}
           </div>
           <div className="col-span-2">
             <Input
