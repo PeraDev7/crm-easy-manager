@@ -45,10 +45,21 @@ export function QuoteItemsList({ items, onItemsChange }: QuoteItemsListProps) {
 
   const handleSaveService = async (index: number) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Errore",
+          description: "Devi essere autenticato per salvare un servizio.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const item = items[index];
       const { error } = await supabase.from("services").insert({
         description: item.description,
         unit_price: item.unit_price,
+        created_by: user.id
       });
 
       if (error) throw error;
