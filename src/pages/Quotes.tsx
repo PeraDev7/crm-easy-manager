@@ -8,7 +8,7 @@ import { CreateQuoteSheet } from "@/components/quotes/CreateQuoteSheet";
 import { useState } from "react";
 import { Layout } from "@/components/Layout";
 
-type Quote = {
+export type Quote = {
   id: string;
   quote_number: string;
   date: string;

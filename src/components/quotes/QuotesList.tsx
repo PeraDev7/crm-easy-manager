@@ -85,23 +85,29 @@ export function QuotesList({ quotes }: QuotesListProps) {
           client:clients(*)
         `)
         .eq("id", id)
-        .single();
+        .maybeSingle(); // Changed from single to maybeSingle
       
       if (quoteError) throw quoteError;
+      if (!quote) {
+        throw new Error("Preventivo non trovato");
+      }
 
       const { data: companySettings, error: settingsError } = await supabase
         .from("company_settings")
         .select("*")
-        .single();
+        .maybeSingle(); // Changed from single to maybeSingle
       
       if (settingsError) throw settingsError;
+      if (!companySettings) {
+        throw new Error("Impostazioni aziendali non configurate");
+      }
 
       generateQuotePDF(quote, companySettings);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error downloading quote:", error);
       toast({
         title: "Errore",
-        description: "Si è verificato un errore durante il download del preventivo.",
+        description: error.message || "Si è verificato un errore durante il download del preventivo.",
         variant: "destructive",
       });
     }
